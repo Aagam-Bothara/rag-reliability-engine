@@ -108,6 +108,7 @@ Everything below has been built, tested, and verified end-to-end:
 - **Multi-format ingestion** — text, markdown, HTML, and PDF file parsing
 - **Normal + strict modes** — strict mode raises all thresholds for conservative operation
 - **Full observability** — structured JSON logging, per-request tracing with spans, query trace persistence
+- **Evaluation harness** — 75 auto-generated labeled test cases across 5 categories (factual, multi-hop, unanswerable, adversarial, strict-mode) with decision accuracy, abstain rates, answer quality, confusion matrix, and per-category metrics
 - **39 tests passing** — unit tests for chunking, RRF, scoring, tokenizer, schemas + integration tests for storage
 
 ### Verified in Production Run
@@ -250,7 +251,6 @@ Based on these signals, the system makes a decision:
 
 ## What's Not Done Yet
 
-- **Evaluation harness** — no labeled dataset to measure accuracy/abstain rates
 - **Embedding cache** — schema exists but not wired into the pipeline yet
 - **Streaming responses** — answers are returned in full, not streamed
 - **Auth/rate limiting** — no API authentication (intended for local/internal use)

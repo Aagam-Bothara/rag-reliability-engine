@@ -1,0 +1,998 @@
+[
+  {
+    "id": "factual_01",
+    "query": "What is the primary goal of Artificial Intelligence?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "simulation",
+      "human",
+      "intelligence"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_02",
+    "query": "List the three main types of AI.",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "narrow",
+      "general",
+      "super"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_03",
+    "query": "What is machine learning considered to be in relation to AI?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "subset",
+      "learn",
+      "data"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_04",
+    "query": "Name one area where deep learning has seen significant success.",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "image",
+      "recognit"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_05",
+    "query": "What does RAG stand for?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "augment",
+      "generation"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_06",
+    "query": "Describe the function of the retriever in a RAG system.",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "find",
+      "relevant",
+      "document"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_07",
+    "query": "What is one advantage of using a RAG system?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "reduce",
+      "hallucination"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_08",
+    "query": "What is a document store's role in RAG?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "store",
+      "knowledge"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_09",
+    "query": "What is one of the challenges associated with RAG systems?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "quality",
+      "impact"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_10",
+    "query": "How can RAG systems be updated with new information?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "without",
+      "retrain"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_11",
+    "query": "Explain what a generator does in a RAG system.",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "produce",
+      "answer",
+      "context"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_12",
+    "query": "What is the purpose of citations in RAG generated answers?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "evidence"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_13",
+    "query": "Which type of AI is designed for specific tasks?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "narrow",
+      "specific",
+      "task"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_14",
+    "query": "What is the role of neural networks in deep learning?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "many",
+      "layer"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_15",
+    "query": "What are the key approaches of machine learning?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "supervised",
+      "unsupervised",
+      "reinforcement"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_16",
+    "query": "What is a potential drawback of RAG when using large knowledge bases?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "latency",
+      "high"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_17",
+    "query": "What aspect of retrieval affects the quality of answers in RAG?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "quality",
+      "answer"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_18",
+    "query": "What two processes does RAG combine?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "generation"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_19",
+    "query": "What is the term for hypothetical AI that surpasses human intelligence?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "super",
+      "surpass"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "factual_20",
+    "query": "What factors related to text segments can affect RAG performance?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "chunk",
+      "size",
+      "overlap"
+    ],
+    "category": "factual"
+  },
+  {
+    "id": "multi_hop_01",
+    "query": "How does RAG address the problem of AI hallucination, and what component is crucial for ensuring the information used is up-to-date?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "hallucination",
+      "grounding",
+      "document store"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_02",
+    "query": "If a company wants to use AI for customer service but needs to incorporate their own specific product manuals, why would RAG be a suitable approach, and what are some potential performance bottlenecks to consider?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "domain",
+      "retraining",
+      "latency"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_03",
+    "query": "What are the key differences between Narrow AI and General AI, and how does RAG leverage information retrieval to enhance the capabilities of a Narrow AI system?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "narrow",
+      "general",
+      "retrieval"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_04",
+    "query": "How can deep learning techniques, such as those used in image recognition, be integrated into a RAG system to improve the retrieval of relevant documents?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "deep learning",
+      "image",
+      "retrieval"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_05",
+    "query": "What are the three main components of a RAG system, and how does the quality of the retriever directly impact the overall accuracy of the generated responses?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "retriever",
+      "generator",
+      "accuracy"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_06",
+    "query": "Considering the different types of machine learning, how could reinforcement learning be used to optimize the document retrieval process within a RAG system?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "reinforcement",
+      "retrieval",
+      "optimize"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_07",
+    "query": "If a RAG system is used to answer questions about complex scientific topics, what are the benefits of providing citations, and how does this relate to reducing AI hallucination?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "citations",
+      "hallucination",
+      "evidence"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_08",
+    "query": "How does the concept of 'thinking like humans' in AI relate to the generator component in RAG, and what are the limitations of current AI in achieving true human-level understanding?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "human",
+      "generator",
+      "limitations"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_09",
+    "query": "What are the trade-offs between chunk size and overlap in a RAG system, and how do these parameters affect both retrieval quality and the latency of generating answers?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "chunk",
+      "overlap",
+      "latency"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "multi_hop_10",
+    "query": "In the context of AI development, how does the potential emergence of Super AI relate to the ongoing efforts to improve the reliability and trustworthiness of RAG systems?",
+    "mode": "normal",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer"
+    ],
+    "expected_answer_contains": [
+      "super ai",
+      "trustworthiness",
+      "reliability"
+    ],
+    "category": "multi-hop"
+  },
+  {
+    "id": "unanswerable_01",
+    "query": "What is the mechanism of action of Metformin in treating type 2 diabetes?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_02",
+    "query": "How does the Federal Reserve influence interest rates in the United States?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_03",
+    "query": "What is the optimal training regimen for a marathon runner to improve their VO2 max?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_04",
+    "query": "What are the coordinates of the geographic South Pole?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_05",
+    "query": "What are the products of the reaction between hydrochloric acid (HCl) and sodium hydroxide (NaOH)?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_06",
+    "query": "What were the primary causes of the French Revolution?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_07",
+    "query": "How do you make a classic b\u00e9chamel sauce from scratch?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_08",
+    "query": "What is the estimated age of the universe?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_09",
+    "query": "What are the key differences between common law and civil law legal systems?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_10",
+    "query": "What is the circle of fifths and how is it used in musical composition?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_11",
+    "query": "What is the role of coral reefs in maintaining ocean biodiversity?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_12",
+    "query": "How does a turbocharger increase the power output of an internal combustion engine?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_13",
+    "query": "What are the key differences between silk and linen fabrics?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_14",
+    "query": "What are the principles of sustainable urban planning?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "unanswerable_15",
+    "query": "What are the benefits of crop rotation in maintaining soil health?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "unanswerable"
+  },
+  {
+    "id": "adversarial_01",
+    "query": "What are the common loss functions used when training neural networks for image recognition tasks?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_02",
+    "query": "How does backpropagation work in a deep neural network?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_03",
+    "query": "What are the key differences between the BERT and GPT models in NLP?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_04",
+    "query": "What are the best practices for hyperparameter tuning in deep learning models?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_05",
+    "query": "How can I use LangChain to build a RAG system?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_06",
+    "query": "What are the common evaluation metrics for RAG systems, such as BLEU or ROUGE?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_07",
+    "query": "What are the different types of vector databases that can be used in a RAG system?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_08",
+    "query": "How does the attention mechanism work in transformer networks?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_09",
+    "query": "What are the ethical considerations surrounding the use of AI in facial recognition technology?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_10",
+    "query": "What are the different types of embedding models that can be used to represent documents in a RAG system?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_11",
+    "query": "How can I use prompt engineering techniques to improve the performance of a RAG system?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_12",
+    "query": "What are the steps involved in fine-tuning a pre-trained language model for a specific task?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_13",
+    "query": "How does gradient descent work in machine learning?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_14",
+    "query": "What are the current regulations surrounding the use of AI in healthcare?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "adversarial_15",
+    "query": "What is the perplexity of a language model, and how is it calculated?",
+    "mode": "normal",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain",
+      "clarify"
+    ],
+    "expected_answer_contains": [],
+    "category": "adversarial"
+  },
+  {
+    "id": "strict_01",
+    "query": "What is the primary goal of Artificial Intelligence?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "simulation",
+      "human",
+      "intelligence"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_02",
+    "query": "List the three main types of AI.",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "narrow",
+      "general",
+      "super"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_03",
+    "query": "What is machine learning considered to be in relation to AI?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "subset",
+      "learn",
+      "data"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_04",
+    "query": "Name one area where deep learning has seen significant success.",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "image",
+      "recognit"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_05",
+    "query": "What does RAG stand for?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "augment",
+      "generation"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_06",
+    "query": "Describe the function of the retriever in a RAG system.",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "find",
+      "relevant",
+      "document"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_07",
+    "query": "What is one advantage of using a RAG system?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "reduce",
+      "hallucination"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_08",
+    "query": "What is a document store's role in RAG?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "store",
+      "knowledge"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_09",
+    "query": "What is one of the challenges associated with RAG systems?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "retriev",
+      "quality",
+      "impact"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_10",
+    "query": "How can RAG systems be updated with new information?",
+    "mode": "strict",
+    "expected_decision": "answer",
+    "acceptable_decisions": [
+      "answer",
+      "clarify"
+    ],
+    "expected_answer_contains": [
+      "without",
+      "retrain"
+    ],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_abstain_01",
+    "query": "What is the mechanism of action of Metformin in treating type 2 diabetes?",
+    "mode": "strict",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_abstain_02",
+    "query": "How does the Federal Reserve influence interest rates in the United States?",
+    "mode": "strict",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_abstain_03",
+    "query": "What is the optimal training regimen for a marathon runner to improve their VO2 max?",
+    "mode": "strict",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_abstain_04",
+    "query": "What are the coordinates of the geographic South Pole?",
+    "mode": "strict",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "strict-mode"
+  },
+  {
+    "id": "strict_abstain_05",
+    "query": "What are the products of the reaction between hydrochloric acid (HCl) and sodium hydroxide (NaOH)?",
+    "mode": "strict",
+    "expected_decision": "abstain",
+    "acceptable_decisions": [
+      "abstain"
+    ],
+    "expected_answer_contains": [],
+    "category": "strict-mode"
+  }
+]

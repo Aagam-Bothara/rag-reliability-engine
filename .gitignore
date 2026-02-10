@@ -22,6 +22,9 @@ env/
 # Environment
 .env
 
+# Claude Code
+.claude/
+
 # Runtime data
 data/
 
