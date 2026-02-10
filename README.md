@@ -1,8 +1,6 @@
 # RAG Reliability Engine
 
-A RAG system that knows when it doesn't know.
-
-Most RAG systems happily hallucinate when they can't find good evidence. This one doesn't. It scores retrieval quality, checks if the answer is actually grounded in the sources, detects contradictions between documents, and — when the evidence isn't good enough — it says "I don't know" instead of making things up.
+A RAG system that knows when it doesn't know — scores retrieval quality, verifies groundedness, detects contradictions, and abstains when the evidence isn't good enough.
 
 ---
 
@@ -56,8 +54,6 @@ flowchart TD
 
 ### Offline: Indexing Path
 
-How documents go from raw files to searchable indexes:
-
 ```mermaid
 flowchart LR
     UP["📄 File Upload\n(.txt .md .html .pdf)"] --> PA["Parse\n(4 format parsers)"]
@@ -89,9 +85,60 @@ flowchart LR
 
 ---
 
-## What's Working (v1)
+## Evaluation Results
 
-Everything below has been built, tested, and verified end-to-end:
+75 labeled test cases across 5 categories, run against the live system. Labels are auto-generated from seed documents via Gemini, then **manually verified** for correctness — expected decisions and keywords checked against actual KB content.
+
+### Overall
+
+| Metric | Value |
+|--------|-------|
+| Decision accuracy | **76.0%** |
+| Correct abstain rate (unanswerable → abstain) | **100%** |
+| False answer rate (adversarial → answered anyway) | **53.3%** |
+| False abstain rate (answerable → abstained) | **25.0%** |
+| Answer keyword quality | **66.7%** |
+| Avg confidence (answered cases) | **0.69** |
+
+### Per-Category Breakdown
+
+| Category | Cases | Decision Accuracy | Avg Confidence | Avg Latency | Abstain Rate |
+|----------|------:|------------------:|---------------:|------------:|-------------:|
+| factual | 20 | 70.0% | 0.51 | 5,720 ms | 30.0% |
+| multi-hop | 10 | 100.0% | 0.69 | 8,276 ms | 0.0% |
+| unanswerable | 15 | 100.0% | 0.00 | 3,046 ms | 100.0% |
+| adversarial | 15 | 46.7% | 0.35 | 5,266 ms | 46.7% |
+| strict-mode | 15 | 73.3% | 0.32 | 3,760 ms | 60.0% |
+
+### Confusion Matrix
+
+| Expected \ Actual | answer | clarify | abstain |
+|-------------------|-------:|--------:|--------:|
+| **answer** | 30 | 0 | 10 |
+| **clarify** | 0 | 0 | 0 |
+| **abstain** | 8 | 0 | 27 |
+
+### What the Numbers Mean
+
+**The system never hallucinates on truly off-topic questions.** All 15 unanswerable cases (medicine, finance, sports, geography, chemistry, etc.) correctly abstained — 100% correct abstain rate.
+
+**Adversarial near-misses are the weak spot.** Questions about related-but-uncovered topics (backpropagation, LangChain, vector databases, attention mechanisms) fooled the system 53% of the time. This makes sense — the retriever finds semantically similar chunks and the RQ score clears the threshold, even though the retrieved content doesn't actually answer the question. Fixing this likely requires better groundedness calibration or semantic entailment checking.
+
+**Some factual questions hit the abstain threshold.** 6 of 20 factual questions abstained (RQ ~0.33, just below the 0.35 cutoff). These were questions about the AI document (narrow AI, deep learning, Super AI) where the chunking split the relevant content across boundaries. This is a known trade-off between chunk size and retrieval coverage.
+
+### How the Eval Works
+
+| Step | Details |
+|------|---------|
+| **Label generation** | `scripts/generate_eval_data.py` — Gemini reads seed docs, generates questions + expected keywords per section |
+| **Label types** | Expected decision (answer/abstain), acceptable decisions (accounts for LLM non-determinism), expected answer keywords |
+| **Leakage prevention** | Generator only sees seed doc text, NOT the system's prompts, thresholds, or internal logic |
+| **Runner** | `scripts/run_eval.py` — hits `POST /query` over HTTP (tests full stack including routing + middleware) |
+| **Verification** | Keywords checked via case-insensitive substring match against the actual answer text |
+
+---
+
+## What's Working (v1)
 
 - **Hybrid retrieval** — FAISS vector search + BM25 keyword search, fused with Reciprocal Rank Fusion
 - **Cross-encoder reranking** — ms-marco-MiniLM-L-6-v2 rescores query-document pairs for better precision
@@ -108,18 +155,30 @@ Everything below has been built, tested, and verified end-to-end:
 - **Multi-format ingestion** — text, markdown, HTML, and PDF file parsing
 - **Normal + strict modes** — strict mode raises all thresholds for conservative operation
 - **Full observability** — structured JSON logging, per-request tracing with spans, query trace persistence
-- **Evaluation harness** — 75 auto-generated labeled test cases across 5 categories (factual, multi-hop, unanswerable, adversarial, strict-mode) with decision accuracy, abstain rates, answer quality, confusion matrix, and per-category metrics
-- **39 tests passing** — unit tests for chunking, RRF, scoring, tokenizer, schemas + integration tests for storage
+- **Evaluation harness** — 75 labeled test cases, 5 categories, auto-generated + manually verified ([tests/](tests/), [eval/](src/rag_engine/evaluation/))
+- **39 unit + integration tests** — chunking, RRF, scoring, tokenizer, schemas, storage ([tests/](tests/))
 
-### Verified in Production Run
+---
 
-| Endpoint | Result |
-|----------|--------|
-| `GET /health` | `{"status": "ok", "docs": 2, "chunks": 4}` |
-| `POST /ingest` (markdown) | 3 chunks created, 85% coverage |
-| `POST /ingest` (text) | 1 chunk created, 100% coverage |
-| `POST /query` (normal) | Answer with confidence 0.79, RQ 0.875, decision: pass |
-| `POST /query` (strict) | Fallback triggered (expanded retrieval + query rewrite), confidence 0.61 |
+## Latency & Cost Profile
+
+Measured on a local machine (no GPU). All LLM calls go to Gemini 2.0 Flash, embeddings to OpenAI text-embedding-3-small.
+
+| Pipeline Stage | Typical Latency | Notes |
+|----------------|----------------:|-------|
+| Query understanding | ~50 ms | Local (language detection + normalization) |
+| Query decomposition | ~1,500 ms | 1 Gemini call |
+| Hybrid retrieval (per sub-question) | ~800 ms | 1 OpenAI embedding + FAISS search + BM25 search |
+| Cross-encoder reranking | ~200 ms | Local inference (ms-marco-MiniLM-L-6-v2, CPU) |
+| RQ scoring + decision gate | ~5 ms | Pure math |
+| Fallback (when triggered) | ~3,000 ms | Expand k + Gemini query rewrite + retry retrieval |
+| Answer generation | ~1,200 ms | 1 Gemini call |
+| Verification (parallel) | ~1,500 ms | 2-3 Gemini calls in parallel (groundedness + contradiction + self-consistency) |
+| **Total (normal, no fallback)** | **~5,000 ms** | |
+| **Total (with fallback)** | **~8,000 ms** | |
+| **Total (strict mode)** | **~4,000-8,000 ms** | Higher thresholds trigger fallback more often |
+
+**Cost per query** (approximate): ~$0.001-0.003 depending on sub-questions and whether fallback triggers. Dominated by Gemini calls (3-6 per query) and one OpenAI embedding call.
 
 ---
 
@@ -180,10 +239,20 @@ curl -X POST http://localhost:8000/query \
   -d '{"query": "What does the document say about X?", "mode": "strict"}'
 ```
 
-### Run Tests
+### Run Tests & Evaluation
 
 ```bash
+# Unit + integration tests
 pytest tests/ -v
+
+# Seed sample data
+python scripts/seed_data.py
+
+# Generate eval dataset (requires Gemini API key)
+python scripts/generate_eval_data.py
+
+# Run eval harness (server must be running)
+python scripts/run_eval.py
 ```
 
 ---
@@ -196,6 +265,7 @@ src/rag_engine/
 ├── chunking/             # Structure-aware splitting + overlap + quality filtering
 ├── config/               # Pydantic Settings (env-driven) + constants
 ├── embeddings/           # OpenAI embedder + SQLite cache
+├── evaluation/           # Eval harness: metrics, runner, dataset generation
 ├── generation/           # Gemini provider + prompt templates + answer builder
 ├── ingestion/            # File parsers (txt/md/html/pdf) + registry + pipeline
 ├── keyword_search/       # BM25 index + text tokenizer
