@@ -1,0 +1,5 @@
+This is a sample plain text file for testing the ingestion pipeline.
+
+It contains multiple paragraphs to test chunking.
+
+The RAG system should be able to parse this file, split it into chunks, embed each chunk, and store them in the vector and keyword search indexes.

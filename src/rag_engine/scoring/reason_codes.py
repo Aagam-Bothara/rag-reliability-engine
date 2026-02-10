@@ -1,0 +1,19 @@
+"""Reason codes for retrieval quality and verification decisions."""
+
+from __future__ import annotations
+
+from enum import Enum
+
+
+class ReasonCode(str, Enum):
+    LOW_COVERAGE = "LOW_COVERAGE"
+    LOW_MARGIN = "LOW_MARGIN"
+    LOW_RELEVANCE = "LOW_RELEVANCE"
+    LOW_CONSISTENCY = "LOW_CONSISTENCY"
+    CONTRADICTION_FOUND = "CONTRADICTION_FOUND"
+    LOW_GROUNDEDNESS = "LOW_GROUNDEDNESS"
+    SELF_INCONSISTENCY = "SELF_INCONSISTENCY"
+    NO_RESULTS = "NO_RESULTS"
+    FALLBACK_USED = "FALLBACK_USED"
+    FALLBACK_FAILED = "FALLBACK_FAILED"
+    LATENCY_BUDGET_EXCEEDED = "LATENCY_BUDGET_EXCEEDED"

@@ -1,0 +1,9 @@
+Retrieval-Augmented Generation (RAG) is a technique that combines information retrieval with text generation to produce more accurate and grounded responses.
+
+RAG systems work by first retrieving relevant documents from a knowledge base, then using those documents as context for a language model to generate answers. This approach significantly reduces hallucination compared to using language models alone.
+
+The main components of a RAG system include a document store for storing the knowledge base, a retriever for finding relevant documents, and a generator for producing answers. The retriever typically uses both keyword-based search (like BM25) and semantic vector search for hybrid retrieval.
+
+Quality assurance in RAG systems involves checking retrieval quality, verifying that generated answers are grounded in the evidence, and detecting contradictions between sources. A well-designed RAG system will abstain from answering when the evidence is insufficient rather than risk providing incorrect information.
+
+Common challenges in RAG include chunk size optimization, handling multi-hop questions that require information from multiple sources, and maintaining low latency while performing thorough quality checks. Cross-encoder reranking can significantly improve retrieval quality by scoring query-document pairs more accurately than initial retrieval methods.
