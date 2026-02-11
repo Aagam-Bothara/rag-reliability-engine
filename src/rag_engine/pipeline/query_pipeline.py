@@ -135,13 +135,19 @@ class QueryPipeline:
                 processed.normalized, reranked, decomposed, request.mode
             )
 
+        # STEP 7.5: Detect self-admitted insufficient evidence
+        if self._answer_admits_ignorance(gen_result.answer):
+            logger.info("answer_admits_ignorance", query=processed.normalized)
+            reasons = rq_reasons + [ReasonCode.LOW_GROUNDEDNESS]
+            return self._build_abstain_response(rq_score, reasons, trace, request)
+
         # STEP 8: Verification
         with trace.span("verification"):
             remaining_ms = (deadline - time.monotonic()) * 1000
             evidence_chunks = [c.chunk for c in reranked]
 
             groundedness_score, contradiction_rate = await asyncio.gather(
-                self._groundedness.check(gen_result.answer, evidence_chunks),
+                self._groundedness.check(gen_result.answer, evidence_chunks, processed.normalized),
                 self._contradiction.detect_answer_conflicts(
                     gen_result.answer, evidence_chunks
                 ),
@@ -262,6 +268,37 @@ class QueryPipeline:
             if existing is None or c.score > existing.score:
                 seen[c.chunk.chunk_id] = c
         return list(seen.values())
+
+    @staticmethod
+    def _answer_admits_ignorance(answer: str) -> bool:
+        """Detect when the generated answer itself says the evidence is insufficient.
+
+        Only matches explicit refusal patterns — avoids false positives from
+        legitimate phrases like 'not contained in the model weights'.
+        """
+        lower = answer.lower()
+        # Full refusal patterns that unambiguously indicate the LLM can't answer
+        refusal_patterns = [
+            "do not contain information",
+            "does not contain information",
+            "do not contain the answer",
+            "does not contain the answer",
+            "don't contain information",
+            "doesn't contain information",
+            "cannot answer the question",
+            "cannot answer this question",
+            "unable to answer",
+            "i cannot provide an answer",
+            "i am unable to",
+            "no relevant information",
+            "outside the scope of",
+            "is not discussed in",
+            "are not discussed in",
+            "not contain any information",
+            "do not address",
+            "does not address",
+        ]
+        return any(phrase in lower for phrase in refusal_patterns)
 
     @staticmethod
     def _map_decision(verification_decision: str, mode: str) -> str:

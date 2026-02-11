@@ -25,10 +25,10 @@ class GroundednessChecker:
     def __init__(self, llm) -> None:
         self._llm = llm
 
-    async def check(self, answer: str, evidence: list[Chunk]) -> float:
+    async def check(self, answer: str, evidence: list[Chunk], query: str = "") -> float:
         evidence_block = format_evidence_block(evidence)
         prompt = GROUNDEDNESS_CHECK_PROMPT.format(
-            answer=answer, evidence_block=evidence_block
+            query=query, answer=answer, evidence_block=evidence_block
         )
 
         try:

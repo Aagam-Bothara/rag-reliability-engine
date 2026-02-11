@@ -33,10 +33,10 @@ class Settings(BaseSettings):
 
     # Retrieval quality scoring weights
     rq_proceed_threshold: float = 0.55
-    rq_fallback_threshold: float = 0.35
-    rq_w_relevance: float = 0.35
+    rq_fallback_threshold: float = 0.25
+    rq_w_relevance: float = 0.45
     rq_w_margin: float = 0.20
-    rq_w_coverage: float = 0.25
+    rq_w_coverage: float = 0.15
     rq_w_consistency: float = 0.20
 
     # Confidence scoring weights

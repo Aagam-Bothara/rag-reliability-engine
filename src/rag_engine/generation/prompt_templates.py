@@ -33,16 +33,25 @@ If the question is already simple, return it as the only sub-question.
 
 Question: {query}"""
 
-GROUNDEDNESS_CHECK_PROMPT = """Evaluate how well the following answer is grounded in the provided evidence.
+GROUNDEDNESS_CHECK_PROMPT = """Evaluate whether the evidence actually answers the question, and how well the answer is grounded in that evidence.
+
+Question: {query}
 
 Answer: {answer}
 
 Evidence:
 {evidence_block}
 
-For each claim in the answer, determine if it is directly supported by the evidence.
+Instructions:
+1. First check: Does the evidence contain information that DIRECTLY answers the question? If the evidence is about a completely different topic than the question, the score MUST be below 0.2 regardless of what the answer says.
+2. Extract each distinct factual claim from the answer.
+3. For each claim, check if it is EXPLICITLY stated or directly entailed by the evidence.
+4. A claim that is merely topically related but not actually stated in the evidence counts as UNSUPPORTED.
+5. If the answer discusses a topic or concept not covered in the evidence, the score should be very low (below 0.3).
+6. Only count a claim as supported if you can point to a specific sentence in the evidence that states it.
+
 Return a JSON object:
-- "score": float between 0.0 (not grounded) and 1.0 (fully grounded)
+- "score": float between 0.0 (not grounded) and 1.0 (fully grounded) — the fraction of claims explicitly supported by relevant evidence
 - "unsupported_claims": list of claims not supported by evidence"""
 
 CONTRADICTION_DETECTION_PROMPT = """Analyze the following passages for contradictions.

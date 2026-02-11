@@ -41,7 +41,7 @@ class VerificationDecisionMaker:
         # Decision logic
         if groundedness >= ground_pass and contradiction_rate <= contra_pass:
             decision = "pass"
-        elif groundedness >= ground_warn or contradiction_rate <= contra_warn:
+        elif groundedness >= ground_warn and contradiction_rate <= contra_warn:
             decision = "warn"
         else:
             decision = "abstain"
