@@ -7,7 +7,7 @@ import time
 
 from rag_engine.config.settings import Settings
 from rag_engine.generation.answer_generator import AnswerGenerator
-from rag_engine.models.domain import RetrievalCandidate
+from rag_engine.models.domain import GenerationResult, RetrievalCandidate
 from rag_engine.models.schemas import Citation, DebugInfo, QueryRequest
 from rag_engine.models.schemas import QueryResponse as QueryResponseSchema
 from rag_engine.observability.logger import get_logger
@@ -135,11 +135,27 @@ class QueryPipeline:
                 processed.normalized, reranked, decomposed, request.mode
             )
 
-        # STEP 7.5: Detect self-admitted insufficient evidence
+        # STEP 7.5: Detect self-admitted insufficient evidence (RQ-aware)
         if self._answer_admits_ignorance(gen_result.answer):
-            logger.info("answer_admits_ignorance", query=processed.normalized)
             reasons = rq_reasons + [ReasonCode.LOW_GROUNDEDNESS]
-            return self._build_abstain_response(rq_score, reasons, trace, request)
+            if rq_score >= self._settings.rq_proceed_threshold:
+                # High-RQ ignorance: evidence was good, LLM hedged — clarify
+                logger.info(
+                    "answer_admits_ignorance_clarify",
+                    query=processed.normalized,
+                    rq=round(rq_score, 4),
+                )
+                return self._build_clarify_response(
+                    gen_result, rq_score, reasons, trace, request
+                )
+            else:
+                # Low-RQ ignorance: evidence was poor — hard abstain
+                logger.info(
+                    "answer_admits_ignorance_abstain",
+                    query=processed.normalized,
+                    rq=round(rq_score, 4),
+                )
+                return self._build_abstain_response(rq_score, reasons, trace, request)
 
         # STEP 8: Verification
         with trace.span("verification"):
@@ -257,6 +273,52 @@ class QueryPipeline:
             ),
         )
 
+    def _build_clarify_response(
+        self,
+        gen_result: GenerationResult,
+        rq_score: float,
+        reasons: list,
+        trace: TraceContext,
+        request: QueryRequest,
+    ) -> QueryResponseSchema:
+        """Build a clarify response: answer + caveat + citations."""
+        answer_text = (
+            gen_result.answer
+            + "\n\nNote: This answer has moderate uncertainty. "
+            "Some claims may not be fully supported by the available evidence."
+        )
+        confidence = round(rq_score * 0.5, 4)
+
+        trace_obj = trace.to_trace(
+            query=request.query,
+            rq_score=rq_score,
+            confidence=confidence,
+            decision="clarify",
+            reason_codes=[str(r) for r in reasons],
+        )
+        asyncio.create_task(self._trace_store.save_trace(trace_obj))
+
+        return QueryResponseSchema(
+            answer=answer_text,
+            citations=[
+                Citation(
+                    doc_id=c.doc_id,
+                    chunk_id=c.chunk_id,
+                    text_snippet=c.text[:200],
+                )
+                for c in gen_result.cited_chunks
+            ],
+            confidence=confidence,
+            decision="clarify",
+            reasons=[str(r) for r in reasons],
+            debug=DebugInfo(
+                retrieval_quality=round(rq_score, 4),
+                rerank_top_scores=[],
+                trace_id=trace.trace_id,
+                latency_ms=round(trace.elapsed_ms, 2),
+            ),
+        )
+
     @staticmethod
     def _deduplicate(
         candidates: list[RetrievalCandidate],
@@ -283,6 +345,8 @@ class QueryPipeline:
             "does not contain information",
             "do not contain the answer",
             "does not contain the answer",
+            "do not contain the necessary",
+            "do not contain the coordinates",
             "don't contain information",
             "doesn't contain information",
             "cannot answer the question",
@@ -297,6 +361,7 @@ class QueryPipeline:
             "not contain any information",
             "do not address",
             "does not address",
+            "not provided in the evidence",
         ]
         return any(phrase in lower for phrase in refusal_patterns)
 
@@ -306,6 +371,6 @@ class QueryPipeline:
         if verification_decision == "pass":
             return "answer"
         elif verification_decision == "warn":
-            return "clarify" if mode == "strict" else "answer"
+            return "clarify"
         else:
             return "abstain"

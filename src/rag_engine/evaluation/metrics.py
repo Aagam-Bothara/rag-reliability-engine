@@ -60,6 +60,20 @@ def compute_metrics(results: list[EvalCaseResult]) -> dict:
     false_abstain = sum(1 for r in expected_answer if r.actual_decision == "abstain")
     false_abstain_rate = false_abstain / len(expected_answer) if expected_answer else 0.0
 
+    # False answer rate: of expected-abstain cases, how many returned "answer"
+    # (clarify is NOT a false answer since it includes a caveat)
+    expected_not_answer = [r for r in valid if r.expected_decision == "abstain"]
+    false_answers = sum(1 for r in expected_not_answer if r.actual_decision == "answer")
+    false_answer_rate = false_answers / len(expected_not_answer) if expected_not_answer else 0.0
+
+    # Adversarial decision accuracy
+    adversarial = [r for r in valid if r.category == "adversarial"]
+    adversarial_accuracy = (
+        sum(r.decision_correct for r in adversarial) / len(adversarial)
+        if adversarial
+        else 0.0
+    )
+
     # Answer quality: for non-abstain results with expected keywords,
     # what fraction had ALL keywords found
     answerable_with_keywords = [
@@ -85,6 +99,8 @@ def compute_metrics(results: list[EvalCaseResult]) -> dict:
         "abstain_rate": abstain_rate,
         "correct_abstain_rate": correct_abstain_rate,
         "false_abstain_rate": false_abstain_rate,
+        "false_answer_rate": false_answer_rate,
+        "adversarial_accuracy": adversarial_accuracy,
         "answer_quality": answer_quality,
         "avg_confidence": avg_confidence,
         "avg_latency_ms": avg_latency,
@@ -142,6 +158,8 @@ def _empty_metrics() -> dict:
         "abstain_rate": 0.0,
         "correct_abstain_rate": 0.0,
         "false_abstain_rate": 0.0,
+        "false_answer_rate": 0.0,
+        "adversarial_accuracy": 0.0,
         "answer_quality": 0.0,
         "avg_confidence": 0.0,
         "avg_latency_ms": 0.0,

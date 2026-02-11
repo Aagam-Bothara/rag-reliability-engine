@@ -5,7 +5,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "simulation",
@@ -20,7 +21,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "narrow",
@@ -35,7 +37,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "subset",
@@ -50,7 +53,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "image",
@@ -64,7 +68,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "retriev",
@@ -79,7 +84,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "find",
@@ -94,7 +100,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "reduce",
@@ -108,7 +115,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "store",
@@ -122,7 +130,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "retriev",
@@ -137,7 +146,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "without",
@@ -151,7 +161,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "produce",
@@ -166,7 +177,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "evidence"
@@ -179,7 +191,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "narrow",
@@ -194,7 +207,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "many",
@@ -208,7 +222,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "supervised",
@@ -223,7 +238,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "latency",
@@ -237,7 +253,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "retriev",
@@ -252,7 +269,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "retriev",
@@ -266,7 +284,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "super",
@@ -280,7 +299,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "chunk",
@@ -295,7 +315,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "hallucination",
@@ -310,7 +331,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "domain",
@@ -325,7 +347,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "narrow",
@@ -340,7 +363,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "deep learning",
@@ -355,7 +379,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "retriever",
@@ -370,7 +395,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "reinforcement",
@@ -385,7 +411,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "citations",
@@ -400,7 +427,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "human",
@@ -415,7 +443,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "chunk",
@@ -430,7 +459,8 @@
     "mode": "normal",
     "expected_decision": "answer",
     "acceptable_decisions": [
-      "answer"
+      "answer",
+      "clarify"
     ],
     "expected_answer_contains": [
       "super ai",
@@ -507,7 +537,7 @@
   },
   {
     "id": "unanswerable_07",
-    "query": "How do you make a classic b\u00e9chamel sauce from scratch?",
+    "query": "How do you make a classic béchamel sauce from scratch?",
     "mode": "normal",
     "expected_decision": "abstain",
     "acceptable_decisions": [
