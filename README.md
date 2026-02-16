@@ -6,9 +6,7 @@ A RAG system that knows when it doesn't know — scores retrieval quality, verif
 
 ## Architecture
 
-### Online: Query Path
-
-How a question goes from user input to a verified, cited answer:
+### Query Path
 
 ```mermaid
 flowchart TD
@@ -52,7 +50,7 @@ flowchart TD
     style DEC fill:#2980B9,stroke:#1F618D,color:#fff
 ```
 
-### Offline: Indexing Path
+### Indexing Path
 
 ```mermaid
 flowchart LR
@@ -66,259 +64,49 @@ flowchart LR
     style IX fill:#27AE60,stroke:#1E8449,color:#fff
 ```
 
-### Storage & Observability
-
-```mermaid
-flowchart LR
-    subgraph Storage
-        SQL["SQLite\n(docs + chunks + traces)"]
-    end
-    subgraph Observability
-        LOG["structlog\n(JSON logging)"]
-        TR["Request Tracing\n(spans + latency)"]
-    end
-
-    style SQL fill:#34495E,stroke:#2C3E50,color:#fff
-    style LOG fill:#34495E,stroke:#2C3E50,color:#fff
-    style TR fill:#34495E,stroke:#2C3E50,color:#fff
-```
-
----
-
-## Evaluation Results
-
-75 labeled test cases across 5 categories, run against the live system. Labels are auto-generated from seed documents via Gemini, then **manually verified** for correctness — expected decisions and keywords checked against actual KB content.
-
-### Headline Metrics
-
-| Metric | Value |
-|--------|-------|
-| **False answer rate** (should-abstain cases answered without caveat) | **11.4%** |
-| **Adversarial accuracy** (adversarial decisions correct) | **86.7%** |
-
-### Overall
-
-| Metric | Value |
-|--------|-------|
-| Decision accuracy | **84.0%** |
-| Correct abstain rate (unanswerable → abstain) | **80.0%** |
-| False abstain rate (answerable → abstained) | **20.0%** |
-| Answer keyword quality | **59.4%** |
-| Avg confidence | **0.35** |
-
-### Per-Category Breakdown
-
-| Category | Cases | Decision Accuracy | Avg Confidence | Avg Latency | Abstain Rate |
-|----------|------:|------------------:|---------------:|------------:|-------------:|
-| factual | 20 | 80.0% | 0.55 | 6,840 ms | 20.0% |
-| multi-hop | 10 | 80.0% | 0.54 | 7,873 ms | 20.0% |
-| unanswerable | 15 | 86.7% | 0.08 | 9,064 ms | 86.7% |
-| adversarial | 15 | 86.7% | 0.18 | 7,231 ms | 66.7% |
-| strict-mode | 15 | 86.7% | 0.40 | 6,282 ms | 46.7% |
-
-### Confusion Matrix
-
-| Expected \ Actual | answer | clarify | abstain |
-|-------------------|-------:|--------:|--------:|
-| **answer** | 30 | 2 | 8 |
-| **clarify** | 0 | 0 | 0 |
-| **abstain** | 4 | 3 | 28 |
-
-### What the Numbers Mean
-
-**Adversarial accuracy jumped from 46.7% → 80% → 86.7%.** The `or` → `and` bug fix, query-aware groundedness prompt, and self-admitted ignorance detector catch most related-but-uncovered topics. The clarify gate now converts borderline adversarial cases (vector databases, embedding models, prompt engineering) into caveated answers instead of confident false answers. The remaining 2 false answers are cases where the evidence is semantically close enough that the groundedness check can't distinguish (LangChain, facial recognition ethics).
-
-**False answer rate dropped from 53.3% → 20% → 11.4%.** Of the 35 should-abstain cases (adversarial + unanswerable), only 4 still get answered without a caveat. The RQ-aware clarify gate and `warn→clarify` mapping in normal mode convert borderline cases into caveated responses instead of confident answers.
-
-**Factual accuracy improved from 70% → 75% → 80%.** The RQ-aware ignorance detector now returns `clarify` instead of hard-abstaining when evidence quality is high (RQ ≥ 0.55) but the LLM hedges. This recovered cases like factual_10 (RQ=0.925) that were previously false abstains. The remaining 4 false abstains are low-RQ cases where content is split across chunk boundaries.
-
-**Three-state decision space now active.** The `clarify` decision is reachable in both normal and strict modes via two paths: (1) high-RQ ignorance detection routes to clarify instead of abstain, and (2) verification `warn` maps to `clarify` in all modes. The confusion matrix shows 5 clarify decisions — 2 from answerable cases (acceptable) and 3 from should-abstain cases (correctly caveated instead of confidently answered).
-
-### How the Eval Works
-
-| Step | Details |
-|------|---------|
-| **Label generation** | `scripts/generate_eval_data.py` — Gemini reads seed docs, generates questions + expected keywords per section |
-| **Label types** | Expected decision (answer/abstain), acceptable decisions (accounts for LLM non-determinism), expected answer keywords |
-| **Leakage prevention** | Generator only sees seed doc text, NOT the system's prompts, thresholds, or internal logic |
-| **Runner** | `scripts/run_eval.py` — hits `POST /query` over HTTP (tests full stack including routing + middleware) |
-| **Verification** | Keywords checked via case-insensitive substring match against the actual answer text |
-
----
-
-## What's Working (v1)
-
-- **Hybrid retrieval** — FAISS vector search + BM25 keyword search, fused with Reciprocal Rank Fusion
-- **Cross-encoder reranking** — ms-marco-MiniLM-L-6-v2 rescores query-document pairs for better precision
-- **Retrieval quality scoring** — weighted composite of relevance, margin, coverage, and consistency
-- **Failure-aware decision gate** — proceeds, triggers fallback (expand k + LLM query rewrite), or abstains based on RQ score
-- **Answer generation with citations** — Gemini generates answers with numbered source references
-- **Groundedness verification** — LLM judge checks if the answer is actually supported by the evidence
-- **Contradiction detection** — pairwise document comparison + answer-vs-evidence conflict check
-- **Self-consistency check** — regenerates the answer and compares for agreement
-- **Confidence scoring** — combines RQ, groundedness, and contradiction rate into a single score
-- **Query decomposition** — breaks multi-hop questions into sub-questions via Gemini
-- **Structure-aware chunking** — splits by headings, paragraphs, and sentences with configurable overlap
-- **Near-duplicate detection** — MinHash LSH catches redundant chunks before indexing
-- **Multi-format ingestion** — text, markdown, HTML, and PDF file parsing
-- **Normal + strict modes** — strict mode raises all thresholds for conservative operation
-- **Full observability** — structured JSON logging, per-request tracing with spans, query trace persistence
-- **Evaluation harness** — 75 labeled test cases, 5 categories, auto-generated + manually verified ([tests/](tests/), [eval/](src/rag_engine/evaluation/))
-- **Embedding cache** — SQLite-backed cache avoids re-embedding identical text, wired transparently into the pipeline
-- **Streaming responses (SSE)** — `POST /query/stream` streams answer tokens via Server-Sent Events, then sends metadata (citations, confidence, decision) as a final event
-- **JWT authentication + rate limiting** — `POST /auth/token` exchanges API keys for JWTs; protected endpoints enforce Bearer token auth and per-key sliding-window rate limiting
-- **Docker** — multi-stage Dockerfile + docker-compose for single-command deployment with volume-mounted persistence
-- **CI/CD** — GitHub Actions pipeline: lint (ruff), type-check (mypy), test (pytest), Docker build
-- **51 unit + integration tests** — chunking, RRF, scoring, tokenizer, schemas, storage, embedding cache, auth, rate limiting ([tests/](tests/))
-
----
-
-## Latency & Cost Profile
-
-Measured on a local machine (no GPU). All LLM calls go to Gemini 2.0 Flash, embeddings to OpenAI text-embedding-3-small.
-
-| Pipeline Stage | Typical Latency | Notes |
-|----------------|----------------:|-------|
-| Query understanding | ~50 ms | Local (language detection + normalization) |
-| Query decomposition | ~1,500 ms | 1 Gemini call |
-| Hybrid retrieval (per sub-question) | ~800 ms | 1 OpenAI embedding + FAISS search + BM25 search |
-| Cross-encoder reranking | ~200 ms | Local inference (ms-marco-MiniLM-L-6-v2, CPU) |
-| RQ scoring + decision gate | ~5 ms | Pure math |
-| Fallback (when triggered) | ~3,000 ms | Expand k + Gemini query rewrite + retry retrieval |
-| Answer generation | ~1,200 ms | 1 Gemini call |
-| Verification (parallel) | ~1,500 ms | 2-3 Gemini calls in parallel (groundedness + contradiction + self-consistency) |
-| **Total (normal, no fallback)** | **~5,000 ms** | |
-| **Total (with fallback)** | **~8,000 ms** | |
-| **Total (strict mode)** | **~4,000-8,000 ms** | Higher thresholds trigger fallback more often |
-
-**Cost per query** (approximate): ~$0.001-0.003 depending on sub-questions and whether fallback triggers. Dominated by Gemini calls (3-6 per query) and one OpenAI embedding call.
-
----
-
-## Tech Stack
-
-| Component | Choice | Why |
-|-----------|--------|-----|
-| Framework | FastAPI (async) | Non-blocking I/O for concurrent retrieval + verification |
-| LLM | Google Gemini 2.0 Flash | Fast, structured output support |
-| Embeddings | OpenAI text-embedding-3-small | 1536-dim, good quality/cost ratio |
-| Vector Store | FAISS (CPU) | Battle-tested, zero infrastructure |
-| Keyword Search | BM25 (rank_bm25) | Catches exact matches that embeddings miss |
-| Reranker | CrossEncoder ms-marco-MiniLM-L-6-v2 | Accurate query-doc pair scoring |
-| Storage | SQLite (aiosqlite) | Async, zero-config, single-file persistence |
-| Observability | structlog | Structured JSON logs, easy to pipe into any log system |
-
 ---
 
 ## Quick Start
 
 ```bash
-# Clone and install
-git clone <your-repo-url>
-cd rag-reliability-engine
+git clone <your-repo-url> && cd rag-reliability-engine
 pip install -e ".[dev]"
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your API keys:
-#   RAG_GOOGLE_API_KEY=your-gemini-key
-#   RAG_OPENAI_API_KEY=your-openai-key
-#   RAG_API_KEYS=your-api-key        (for JWT auth)
-#   RAG_JWT_SECRET=your-secret        (change in production)
-
-# Start the server
+cp .env.example .env   # add your API keys
 python -m rag_engine.main
+```
+
+Or with Docker:
+
+```bash
+docker compose up --build
 ```
 
 Server starts at `http://localhost:8000`.
 
-### Docker
+### Usage
 
 ```bash
-# Start with Docker Compose
-docker compose up --build
-
-# Or build and run manually
-docker build -t rag-engine .
-docker run -p 8000:8000 --env-file .env -v ./data:/app/data rag-engine
-```
-
-### Try It Out
-
-```bash
-# Check health (no auth required)
-curl http://localhost:8000/health
-
 # Get a JWT token
 TOKEN=$(curl -s -X POST http://localhost:8000/auth/token \
   -H "Content-Type: application/json" \
   -d '{"api_key": "your-api-key"}' | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
-# Ingest a file
+# Ingest a document
 curl -X POST http://localhost:8000/ingest \
   -H "Authorization: Bearer $TOKEN" \
-  -F "file=@your-document.txt" \
-  -F 'metadata={"source": "my-doc"}'
+  -F "file=@your-document.txt"
 
-# Ask a question
+# Query
 curl -X POST http://localhost:8000/query \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the document say about X?"}'
 
-# Stream a response (SSE)
+# Stream (SSE)
 curl -N -X POST http://localhost:8000/query/stream \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the document say about X?"}'
-
-# Ask in strict mode (higher thresholds)
-curl -X POST http://localhost:8000/query \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What does the document say about X?", "mode": "strict"}'
-```
-
-### Run Tests & Evaluation
-
-```bash
-# Unit + integration tests
-pytest tests/ -v
-
-# Seed sample data
-python scripts/seed_data.py
-
-# Generate eval dataset (requires Gemini API key)
-python scripts/generate_eval_data.py
-
-# Run eval harness (server must be running)
-python scripts/run_eval.py
-```
-
----
-
-## Project Structure
-
-```
-src/rag_engine/
-├── api/                  # FastAPI routes, middleware, auth, rate limiting, DI
-├── chunking/             # Structure-aware splitting + overlap + quality filtering
-├── config/               # Pydantic Settings (env-driven) + constants
-├── embeddings/           # OpenAI embedder + SQLite cache + cached embedder wrapper
-├── evaluation/           # Eval harness: metrics, runner, dataset generation
-├── generation/           # Gemini provider + prompt templates + answer builder
-├── ingestion/            # File parsers (txt/md/html/pdf) + registry + pipeline
-├── keyword_search/       # BM25 index + text tokenizer
-├── models/               # Domain dataclasses + API schemas
-├── observability/        # structlog config + tracing + metrics
-├── pipeline/             # Query pipeline (orchestrator) + ingest pipeline
-├── protocols/            # typing.Protocol interfaces (7 protocols)
-├── query/                # Query understanding + multi-hop decomposition
-├── retrieval/            # RRF fusion + hybrid retriever + reranker + fallback
-├── scoring/              # Retrieval quality scorer + confidence scorer
-├── storage/              # SQLite doc store + trace store + migrations
-├── vectorstore/          # FAISS IndexFlatIP wrapper with persistence
-└── verification/         # Groundedness + contradiction + self-consistency + decision
 ```
 
 ---
@@ -328,52 +116,131 @@ src/rag_engine/
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | `GET /health` | No | Health check with doc/chunk/index counts |
-| `POST /auth/token` | No | Exchange API key for JWT (`{"api_key": "..."}` → `{"access_token": "..."}`) |
-| `POST /query` | Yes | Query with full response (`{ answer, citations, confidence, decision, reasons, debug }`) |
-| `POST /query/stream` | Yes | Query with SSE streaming (`event: token`, `event: metadata`, `event: done`) |
-| `POST /ingest` | Yes | Ingest document (multipart file + metadata → `{ doc_id, chunks_created, status }`) |
+| `POST /auth/token` | No | Exchange API key for JWT |
+| `POST /query` | Yes | Full query response (answer, citations, confidence, decision) |
+| `POST /query/stream` | Yes | SSE streaming (`event: token` → `event: metadata` → `event: done`) |
+| `POST /ingest` | Yes | Ingest document (multipart file + metadata) |
 
 ---
 
-## How the Confidence Score Works
+## Evaluation Results
 
-The system produces a confidence score (0-1) combining three signals:
+75 labeled test cases across 5 categories, auto-generated via Gemini and manually verified.
+
+| Metric | Value |
+|--------|-------|
+| Decision accuracy | **84.0%** |
+| False answer rate | **11.4%** |
+| Adversarial accuracy | **86.7%** |
+| Correct abstain rate | **80.0%** |
+
+| Category | Cases | Accuracy | Avg Confidence | Avg Latency |
+|----------|------:|--------:|---------------:|------------:|
+| factual | 20 | 80.0% | 0.55 | 6,840 ms |
+| multi-hop | 10 | 80.0% | 0.54 | 7,873 ms |
+| unanswerable | 15 | 86.7% | 0.08 | 9,064 ms |
+| adversarial | 15 | 86.7% | 0.18 | 7,231 ms |
+| strict-mode | 15 | 86.7% | 0.40 | 6,282 ms |
+
+<details>
+<summary>Confusion matrix & analysis</summary>
+
+| Expected \ Actual | answer | clarify | abstain |
+|-------------------|-------:|--------:|--------:|
+| **answer** | 30 | 2 | 8 |
+| **clarify** | 0 | 0 | 0 |
+| **abstain** | 4 | 3 | 28 |
+
+- **False answer rate dropped from 53.3% → 11.4%** via RQ-aware clarify gate and ignorance detection
+- **Adversarial accuracy improved from 46.7% → 86.7%** through query-aware groundedness and self-admitted ignorance detector
+- **Factual accuracy improved from 70% → 80%** by routing high-RQ LLM hedges to clarify instead of hard-abstain
+- Three-state decision space (answer/clarify/abstain) is fully active via verification warnings and ignorance detection
+
+</details>
+
+---
+
+## Scoring
 
 ```
-CONF = α × RetrievalQuality + β × Groundedness - γ × ContradictionRate
+CONF = α × RQ + β × Groundedness - γ × ContradictionRate
+RQ   = w1×relevance + w2×margin + w3×coverage + w4×consistency
 ```
 
-Where **RetrievalQuality** itself is:
+Three-state decision: **answer** (evidence solid) · **clarify** (answer with caveat) · **abstain** (refuses to hallucinate)
+
+---
+
+## Tech Stack
+
+| Component | Choice |
+|-----------|--------|
+| Framework | FastAPI (async) |
+| LLM | Gemini 2.0 Flash |
+| Embeddings | OpenAI text-embedding-3-small (1536-dim, cached in SQLite) |
+| Vector Store | FAISS (CPU) |
+| Keyword Search | BM25 (rank_bm25) |
+| Reranker | ms-marco-MiniLM-L-6-v2 |
+| Storage | SQLite (aiosqlite) |
+| Auth | JWT (pyjwt) + sliding-window rate limiter |
+| Observability | structlog (JSON) + request tracing |
+| CI/CD | GitHub Actions (lint, type-check, test, Docker build) |
+
+---
+
+## Project Structure
 
 ```
-RQ = w1×relevance + w2×margin + w3×coverage + w4×consistency
+src/rag_engine/
+├── api/              # Routes, middleware, auth, rate limiting
+├── chunking/         # Structure-aware splitting + quality filtering
+├── config/           # Pydantic Settings (env-driven)
+├── embeddings/       # OpenAI embedder + SQLite cache wrapper
+├── generation/       # Gemini provider + prompt templates + streaming
+├── ingestion/        # File parsers (txt/md/html/pdf) + pipeline
+├── keyword_search/   # BM25 index + tokenizer
+├── models/           # Domain dataclasses + API schemas
+├── observability/    # Logging + tracing + metrics
+├── pipeline/         # Query pipeline orchestrator
+├── protocols/        # typing.Protocol interfaces
+├── query/            # Understanding + multi-hop decomposition
+├── retrieval/        # RRF + hybrid retriever + reranker + fallback
+├── scoring/          # Retrieval quality + confidence scoring
+├── storage/          # SQLite doc/trace stores + migrations
+├── vectorstore/      # FAISS wrapper with persistence
+└── verification/     # Groundedness + contradiction + self-consistency
 ```
-
-- **Relevance**: How well the top result matches the query (sigmoid-normalized reranker score)
-- **Margin**: Gap between the best and second-best result (higher = more decisive)
-- **Coverage**: How many unique source documents appear in the results
-- **Consistency**: Agreement among top-5 scores (low std = consistent retrieval)
-
-Based on these signals, the system makes a three-state decision:
-- **answer** — evidence is solid, answer is grounded
-- **clarify** — answer provided but with uncertainty caveat (borderline verification or high-RQ ignorance)
-- **abstain** — evidence too weak, refuses to answer rather than hallucinate
 
 ---
 
 ## Configuration
 
-All settings are driven by environment variables with the `RAG_` prefix. See [.env.example](.env.example) for the full list.
+All settings via env vars with `RAG_` prefix. See [.env.example](.env.example).
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RAG_OPENAI_API_KEY` | — | OpenAI API key (embeddings) |
-| `RAG_GOOGLE_API_KEY` | — | Google API key (Gemini LLM) |
-| `RAG_API_KEYS` | `""` | Comma-separated valid API keys for JWT auth |
-| `RAG_JWT_SECRET` | `change-me-in-production` | Secret for signing JWT tokens |
-| `RAG_JWT_EXPIRY_MINUTES` | `60` | JWT token expiration time |
-| `RAG_RATE_LIMIT_REQUESTS_PER_MINUTE` | `60` | Max requests per key per minute |
-| `RAG_EMBEDDING_CACHE_DB_PATH` | `data/embedding_cache.db` | Path to embedding cache SQLite DB |
+| `RAG_GOOGLE_API_KEY` | — | Google API key (Gemini) |
+| `RAG_API_KEYS` | `""` | Comma-separated valid API keys for JWT |
+| `RAG_JWT_SECRET` | `change-me-in-production` | JWT signing secret |
+| `RAG_RATE_LIMIT_REQUESTS_PER_MINUTE` | `60` | Per-key rate limit |
+
+---
+
+## Future Work
+
+- **Managed vector DB** — swap FAISS for Qdrant/Weaviate/Pinecone for horizontal scaling
+- **PostgreSQL** — migrate from SQLite for concurrent write support in production
+- **Multi-turn conversation** — session memory for follow-up questions with context carry-over
+- **Chunk-level citation highlighting** — return exact spans within chunks, not just chunk IDs
+- **OpenTelemetry** — replace custom tracing with OTel for Grafana/Datadog/Jaeger export
+- **Prometheus metrics** — latency histograms, cache hit rates, decision distribution counters
+- **RBAC** — role-based access control (admin, reader, ingester) beyond flat API keys
+- **Incremental re-indexing** — update FAISS/BM25 without full rebuild on document changes
+- **Fine-tuned reranker** — train domain-specific cross-encoder on query logs for better relevance
+- **Batch query API** — process multiple queries in a single request for evaluation and bulk use
+- **Frontend dashboard** — UI for browsing traces, viewing confidence distributions, and testing queries
+- **A/B testing framework** — compare prompt templates and threshold configs on eval sets
 
 ---
 
