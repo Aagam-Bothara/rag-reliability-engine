@@ -23,17 +23,13 @@ class FallbackManager:
         self._rq_scorer = rq_scorer
         self._settings = settings
 
-    async def expanded_retrieval(
-        self, query: str
-    ) -> list[RetrievalCandidate]:
+    async def expanded_retrieval(self, query: str) -> list[RetrievalCandidate]:
         """Try retrieval with larger k values."""
         expand_k = self._settings.retrieval_fallback_expand_k
         candidates = await self._retriever.retrieve(
             query, top_k_bm25=expand_k, top_k_vector=expand_k
         )
-        reranked = await self._reranker.rerank(
-            query, candidates, top_n=self._settings.rerank_top_n
-        )
+        reranked = await self._reranker.rerank(query, candidates, top_n=self._settings.rerank_top_n)
         logger.info("expanded_retrieval", candidates=len(reranked))
         return reranked
 
@@ -57,9 +53,7 @@ class FallbackManager:
                 logger.warning("query_rewrite_failed")
                 return []
 
-    async def fallback_retrieve(
-        self, query: str, llm
-    ) -> RetrievalResult:
+    async def fallback_retrieve(self, query: str, llm) -> RetrievalResult:
         """Execute fallback strategy: expand k, then try query rewrites."""
         # Step 1: Expanded retrieval
         candidates = await self.expanded_retrieval(query)

@@ -47,8 +47,9 @@ class TraceContext:
     def elapsed_ms(self) -> float:
         return (time.monotonic() - self.start_time) * 1000
 
-    def to_trace(self, query: str, rq_score: float, confidence: float,
-                 decision: str, reason_codes: list[str]) -> Trace:
+    def to_trace(
+        self, query: str, rq_score: float, confidence: float, decision: str, reason_codes: list[str]
+    ) -> Trace:
         return Trace(
             trace_id=self.trace_id,
             query=query,
@@ -59,9 +60,13 @@ class TraceContext:
             decision=decision,
             reason_codes=reason_codes,
             spans=[
-                {"name": s.name, "start_ms": s.start_ms,
-                 "end_ms": s.end_ms, "duration_ms": s.duration_ms,
-                 **s.metadata}
+                {
+                    "name": s.name,
+                    "start_ms": s.start_ms,
+                    "end_ms": s.end_ms,
+                    "duration_ms": s.duration_ms,
+                    **s.metadata,
+                }
                 for s in self.spans
             ],
         )

@@ -34,9 +34,7 @@ class OpenAIEmbedder:
         try:
             for i in range(0, len(texts), self._batch_size):
                 batch = texts[i : i + self._batch_size]
-                response = await self._client.embeddings.create(
-                    input=batch, model=self._model
-                )
+                response = await self._client.embeddings.create(input=batch, model=self._model)
                 batch_embeddings = [item.embedding for item in response.data]
                 all_embeddings.extend(batch_embeddings)
             logger.info("embedded_texts", count=len(texts), model=self._model)
@@ -46,9 +44,7 @@ class OpenAIEmbedder:
 
     async def embed_query(self, query: str) -> list[float]:
         try:
-            response = await self._client.embeddings.create(
-                input=[query], model=self._model
-            )
+            response = await self._client.embeddings.create(input=[query], model=self._model)
             return response.data[0].embedding
         except Exception as e:
             raise EmbeddingError(f"Failed to embed query: {e}") from e

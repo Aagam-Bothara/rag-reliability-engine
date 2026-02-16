@@ -32,9 +32,7 @@ class GroundednessChecker:
         )
 
         try:
-            result = await self._llm.generate_structured(
-                prompt, GroundednessResponse
-            )
+            result = await self._llm.generate_structured(prompt, GroundednessResponse)
             score = max(0.0, min(1.0, result.score))
         except Exception:
             try:

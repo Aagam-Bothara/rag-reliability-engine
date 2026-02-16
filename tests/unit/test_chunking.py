@@ -32,7 +32,9 @@ These are the results."""
 
 def test_chunk_with_overlap():
     chunker = StructureChunker(max_tokens=8, overlap_pct=0.15)
-    text = "First paragraph with some words here today.\n\nSecond paragraph with more words here now."
+    text = (
+        "First paragraph with some words here today.\n\nSecond paragraph with more words here now."
+    )
     chunks = chunker.chunk(text, {"doc_id": "test"})
     assert len(chunks) >= 2
     # Second chunk should contain overlap from first

@@ -31,18 +31,22 @@ class StructureChunker:
 
         for heading_path, section_text in sections:
             if self._count_tokens(section_text) <= self._max_tokens:
-                raw_chunks.append({
-                    "text": section_text.strip(),
-                    "heading_path": heading_path,
-                })
+                raw_chunks.append(
+                    {
+                        "text": section_text.strip(),
+                        "heading_path": heading_path,
+                    }
+                )
             else:
                 paragraphs = self._split_by_paragraphs(section_text)
                 for para in paragraphs:
                     if self._count_tokens(para) <= self._max_tokens:
-                        raw_chunks.append({
-                            "text": para.strip(),
-                            "heading_path": heading_path,
-                        })
+                        raw_chunks.append(
+                            {
+                                "text": para.strip(),
+                                "heading_path": heading_path,
+                            }
+                        )
                     else:
                         sentences = self._split_by_sentences(para)
                         buffer = ""
@@ -52,16 +56,20 @@ class StructureChunker:
                                 buffer = candidate
                             else:
                                 if buffer:
-                                    raw_chunks.append({
-                                        "text": buffer.strip(),
-                                        "heading_path": heading_path,
-                                    })
+                                    raw_chunks.append(
+                                        {
+                                            "text": buffer.strip(),
+                                            "heading_path": heading_path,
+                                        }
+                                    )
                                 buffer = sent
                         if buffer.strip():
-                            raw_chunks.append({
-                                "text": buffer.strip(),
-                                "heading_path": heading_path,
-                            })
+                            raw_chunks.append(
+                                {
+                                    "text": buffer.strip(),
+                                    "heading_path": heading_path,
+                                }
+                            )
 
         # Apply overlap
         chunks: list[Chunk] = []
@@ -75,14 +83,16 @@ class StructureChunker:
             if not text_with_overlap.strip():
                 continue
 
-            chunks.append(Chunk(
-                chunk_id=str(uuid4()),
-                doc_id=doc_id,
-                text=text_with_overlap,
-                index=i,
-                metadata={**metadata, "heading_path": rc["heading_path"]},
-                token_count=self._count_tokens(text_with_overlap),
-            ))
+            chunks.append(
+                Chunk(
+                    chunk_id=str(uuid4()),
+                    doc_id=doc_id,
+                    text=text_with_overlap,
+                    index=i,
+                    metadata={**metadata, "heading_path": rc["heading_path"]},
+                    token_count=self._count_tokens(text_with_overlap),
+                )
+            )
 
         return chunks
 

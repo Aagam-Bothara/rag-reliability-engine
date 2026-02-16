@@ -62,11 +62,7 @@ class BM25Index:
             return []
         scores = self._bm25.get_scores(tokenized_query)
         top_indices = np.argsort(scores)[::-1][:top_k]
-        return [
-            (self._chunk_ids[i], float(scores[i]))
-            for i in top_indices
-            if scores[i] > 0
-        ]
+        return [(self._chunk_ids[i], float(scores[i])) for i in top_indices if scores[i] > 0]
 
     def save(self, path: str | None = None) -> None:
         path = path or self._index_path

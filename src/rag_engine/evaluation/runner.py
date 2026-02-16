@@ -127,8 +127,7 @@ async def run_evaluation(
             )
         except Exception as e:
             raise ConnectionError(
-                f"Cannot reach server at {base_url}/health — "
-                f"is the server running? Error: {e}"
+                f"Cannot reach server at {base_url}/health — is the server running? Error: {e}"
             ) from e
 
         # Run all cases with bounded concurrency

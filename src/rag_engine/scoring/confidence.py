@@ -11,8 +11,6 @@ class ConfidenceScorer:
         self.beta = settings.conf_beta
         self.gamma = settings.conf_gamma
 
-    def score(
-        self, rq: float, groundedness: float, contradiction_rate: float
-    ) -> float:
+    def score(self, rq: float, groundedness: float, contradiction_rate: float) -> float:
         conf = self.alpha * rq + self.beta * groundedness - self.gamma * contradiction_rate
         return max(0.0, min(1.0, conf))

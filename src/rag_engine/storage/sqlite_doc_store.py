@@ -57,9 +57,7 @@ class SQLiteDocStore:
     async def get_document(self, doc_id: str) -> Document | None:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT * FROM documents WHERE doc_id = ?", (doc_id,)
-            ) as cursor:
+            async with db.execute("SELECT * FROM documents WHERE doc_id = ?", (doc_id,)) as cursor:
                 row = await cursor.fetchone()
                 if row is None:
                     return None
@@ -77,9 +75,7 @@ class SQLiteDocStore:
     async def get_chunk(self, chunk_id: str) -> Chunk | None:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT * FROM chunks WHERE chunk_id = ?", (chunk_id,)
-            ) as cursor:
+            async with db.execute("SELECT * FROM chunks WHERE chunk_id = ?", (chunk_id,)) as cursor:
                 row = await cursor.fetchone()
                 if row is None:
                     return None

@@ -41,9 +41,7 @@ class SQLiteTraceStore:
     async def get_trace(self, trace_id: str) -> Trace | None:
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT * FROM traces WHERE trace_id = ?", (trace_id,)
-            ) as cursor:
+            async with db.execute("SELECT * FROM traces WHERE trace_id = ?", (trace_id,)) as cursor:
                 row = await cursor.fetchone()
                 if row is None:
                     return None
@@ -63,9 +61,7 @@ class SQLiteTraceStore:
         return Trace(
             trace_id=row["trace_id"],
             query=row["query"],
-            timestamp=datetime.fromisoformat(row["timestamp"]).replace(
-                tzinfo=timezone.utc
-            ),
+            timestamp=datetime.fromisoformat(row["timestamp"]).replace(tzinfo=timezone.utc),
             latency_ms=row["latency_ms"],
             rq_score=row["rq_score"],
             confidence=row["confidence"],

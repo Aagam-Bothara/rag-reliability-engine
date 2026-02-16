@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from itertools import groupby
 
 
@@ -69,15 +69,14 @@ def compute_metrics(results: list[EvalCaseResult]) -> dict:
     # Adversarial decision accuracy
     adversarial = [r for r in valid if r.category == "adversarial"]
     adversarial_accuracy = (
-        sum(r.decision_correct for r in adversarial) / len(adversarial)
-        if adversarial
-        else 0.0
+        sum(r.decision_correct for r in adversarial) / len(adversarial) if adversarial else 0.0
     )
 
     # Answer quality: for non-abstain results with expected keywords,
     # what fraction had ALL keywords found
     answerable_with_keywords = [
-        r for r in valid
+        r
+        for r in valid
         if r.actual_decision != "abstain"
         and r.expected_decision != "abstain"
         and r.expected_answer_contains

@@ -45,10 +45,7 @@ class AnswerGenerator:
             decomposition_context=decomp_context,
         )
 
-        system = (
-            ANSWER_GENERATION_STRICT_SYSTEM if mode == "strict"
-            else ANSWER_GENERATION_SYSTEM
-        )
+        system = ANSWER_GENERATION_STRICT_SYSTEM if mode == "strict" else ANSWER_GENERATION_SYSTEM
 
         answer = await self._llm.generate(prompt, system=system)
 
@@ -60,10 +57,12 @@ class AnswerGenerator:
             if 1 <= idx <= len(evidence):
                 chunk = evidence[idx - 1].chunk
                 cited_chunks.append(chunk)
-                cited_spans.append({
-                    "chunk_id": chunk.chunk_id,
-                    "text": chunk.text[:200],
-                })
+                cited_spans.append(
+                    {
+                        "chunk_id": chunk.chunk_id,
+                        "text": chunk.text[:200],
+                    }
+                )
 
         logger.info(
             "generated_answer",
@@ -99,10 +98,7 @@ class AnswerGenerator:
             decomposition_context=decomp_context,
         )
 
-        system = (
-            ANSWER_GENERATION_STRICT_SYSTEM if mode == "strict"
-            else ANSWER_GENERATION_SYSTEM
-        )
+        system = ANSWER_GENERATION_STRICT_SYSTEM if mode == "strict" else ANSWER_GENERATION_SYSTEM
 
         full_answer = ""
         async for chunk in self._llm.generate_stream(prompt, system=system):
@@ -117,10 +113,12 @@ class AnswerGenerator:
             if 1 <= idx <= len(evidence):
                 chunk = evidence[idx - 1].chunk
                 cited_chunks.append(chunk)
-                cited_spans.append({
-                    "chunk_id": chunk.chunk_id,
-                    "text": chunk.text[:200],
-                })
+                cited_spans.append(
+                    {
+                        "chunk_id": chunk.chunk_id,
+                        "text": chunk.text[:200],
+                    }
+                )
 
         logger.info(
             "generated_answer_stream",
@@ -129,8 +127,11 @@ class AnswerGenerator:
             citations=len(cited_chunks),
         )
 
-        yield None, GenerationResult(
-            answer=full_answer,
-            cited_chunks=cited_chunks,
-            cited_spans=cited_spans,
+        yield (
+            None,
+            GenerationResult(
+                answer=full_answer,
+                cited_chunks=cited_chunks,
+                cited_spans=cited_spans,
+            ),
         )

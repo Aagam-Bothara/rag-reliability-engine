@@ -8,7 +8,7 @@ import numpy as np
 
 from rag_engine.protocols.embedder import Embedder
 from rag_engine.keyword_search.bm25_index import BM25Index
-from rag_engine.models.domain import Chunk, RetrievalCandidate
+from rag_engine.models.domain import RetrievalCandidate
 from rag_engine.observability.logger import get_logger
 from rag_engine.retrieval.rrf import reciprocal_rank_fusion
 from rag_engine.storage.sqlite_doc_store import SQLiteDocStore
@@ -55,9 +55,7 @@ class HybridRetrieverImpl:
         )
 
         # 3. RRF fusion
-        fused = reciprocal_rank_fusion(
-            [vector_results, bm25_results], k=self._rrf_k
-        )
+        fused = reciprocal_rank_fusion([vector_results, bm25_results], k=self._rrf_k)
 
         if not fused:
             return []

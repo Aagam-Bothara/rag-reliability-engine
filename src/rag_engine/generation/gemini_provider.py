@@ -90,6 +90,8 @@ class GeminiProvider:
                 contents=prompt,
                 config=config,
             )
+            if response.text is None:
+                raise GenerationError("Gemini returned empty response")
             data = json.loads(response.text)
             return response_schema.model_validate(data)
         except Exception as e:

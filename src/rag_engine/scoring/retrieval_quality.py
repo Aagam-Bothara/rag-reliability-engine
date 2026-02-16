@@ -18,9 +18,7 @@ class RetrievalQualityScorer:
         self.w3 = settings.rq_w_coverage
         self.w4 = settings.rq_w_consistency
 
-    def score(
-        self, candidates: list[RetrievalCandidate]
-    ) -> tuple[float, list[str]]:
+    def score(self, candidates: list[RetrievalCandidate]) -> tuple[float, list[str]]:
         if not candidates:
             return 0.0, [ReasonCode.NO_RESULTS]
 

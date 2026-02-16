@@ -52,9 +52,7 @@ class IngestionPipeline:
 
         # 1. Parse file
         parser = self._parser_registry.get_parser(file_path.name)
-        raw_text, enriched_metadata = await asyncio.to_thread(
-            parser.parse, file_path, metadata
-        )
+        raw_text, enriched_metadata = await asyncio.to_thread(parser.parse, file_path, metadata)
         logger.info("parsed", doc_id=doc_id, source=str(file_path), chars=len(raw_text))
 
         # 2. Create and save document

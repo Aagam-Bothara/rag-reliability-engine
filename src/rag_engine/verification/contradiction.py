@@ -31,15 +31,11 @@ class ContradictionDetector:
         if len(chunks) < 2:
             return []
 
-        passages = "\n\n".join(
-            f"Passage {i + 1}: {c.text}" for i, c in enumerate(chunks[:5])
-        )
+        passages = "\n\n".join(f"Passage {i + 1}: {c.text}" for i, c in enumerate(chunks[:5]))
         prompt = CONTRADICTION_DETECTION_PROMPT.format(passages=passages)
 
         try:
-            result = await self._llm.generate_structured(
-                prompt, ContradictionResponse
-            )
+            result = await self._llm.generate_structured(prompt, ContradictionResponse)
             return result.contradictions
         except Exception:
             try:
@@ -50,19 +46,13 @@ class ContradictionDetector:
                 logger.warning("doc_conflict_detection_failed")
                 return []
 
-    async def detect_answer_conflicts(
-        self, answer: str, chunks: list[Chunk]
-    ) -> float:
+    async def detect_answer_conflicts(self, answer: str, chunks: list[Chunk]) -> float:
         """Check if the answer contradicts the evidence. Returns contradiction rate 0-1."""
         evidence_block = format_evidence_block(chunks)
-        prompt = ANSWER_CONTRADICTION_PROMPT.format(
-            answer=answer, evidence_block=evidence_block
-        )
+        prompt = ANSWER_CONTRADICTION_PROMPT.format(answer=answer, evidence_block=evidence_block)
 
         try:
-            result = await self._llm.generate_structured(
-                prompt, ContradictionResponse
-            )
+            result = await self._llm.generate_structured(prompt, ContradictionResponse)
             rate = max(0.0, min(1.0, result.contradiction_rate))
         except Exception:
             try:

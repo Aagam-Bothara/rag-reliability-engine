@@ -69,9 +69,7 @@ class EmbeddingCache:
     async def put_batch(self, texts: list[str], embeddings: list[list[float]]) -> None:
         if not texts:
             return
-        rows = [
-            (self._hash(t), json.dumps(e)) for t, e in zip(texts, embeddings)
-        ]
+        rows = [(self._hash(t), json.dumps(e)) for t, e in zip(texts, embeddings)]
         async with aiosqlite.connect(self._db_path) as db:
             await db.executemany(
                 "INSERT OR REPLACE INTO embedding_cache (text_hash, embedding) VALUES (?, ?)",

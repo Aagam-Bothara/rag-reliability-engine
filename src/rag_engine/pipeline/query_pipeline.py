@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import AsyncGenerator
+from typing import Literal
 
 from rag_engine.config.settings import Settings
 from rag_engine.generation.answer_generator import AnswerGenerator
@@ -123,9 +124,7 @@ class QueryPipeline:
                 )
                 if fallback_result.decision == "abstain":
                     reasons = rq_reasons + [ReasonCode.FALLBACK_FAILED]
-                    return self._build_abstain_response(
-                        rq_score, reasons, trace, request
-                    )
+                    return self._build_abstain_response(rq_score, reasons, trace, request)
                 reranked = fallback_result.candidates
                 rq_score = fallback_result.quality_score
                 rq_reasons.append(ReasonCode.FALLBACK_USED)
@@ -146,9 +145,7 @@ class QueryPipeline:
                     query=processed.normalized,
                     rq=round(rq_score, 4),
                 )
-                return self._build_clarify_response(
-                    gen_result, rq_score, reasons, trace, request
-                )
+                return self._build_clarify_response(gen_result, rq_score, reasons, trace, request)
             else:
                 # Low-RQ ignorance: evidence was poor — hard abstain
                 logger.info(
@@ -165,9 +162,7 @@ class QueryPipeline:
 
             groundedness_score, contradiction_rate = await asyncio.gather(
                 self._groundedness.check(gen_result.answer, evidence_chunks, processed.normalized),
-                self._contradiction.detect_answer_conflicts(
-                    gen_result.answer, evidence_chunks
-                ),
+                self._contradiction.detect_answer_conflicts(gen_result.answer, evidence_chunks),
             )
 
             sc_score = None
@@ -181,9 +176,7 @@ class QueryPipeline:
             )
 
         # STEP 9: Final Confidence
-        confidence = self._confidence.score(
-            rq_score, groundedness_score, contradiction_rate
-        )
+        confidence = self._confidence.score(rq_score, groundedness_score, contradiction_rate)
 
         log_generation_metrics(
             trace.trace_id,
@@ -204,8 +197,7 @@ class QueryPipeline:
             )
         elif decision == "clarify":
             answer_text = (
-                gen_result.answer
-                + "\n\nNote: This answer has moderate uncertainty. "
+                gen_result.answer + "\n\nNote: This answer has moderate uncertainty. "
                 "Some claims may not be fully supported by the available evidence."
             )
         else:
@@ -244,9 +236,7 @@ class QueryPipeline:
 
         return response
 
-    async def execute_stream(
-        self, request: QueryRequest
-    ) -> AsyncGenerator[dict, None]:
+    async def execute_stream(self, request: QueryRequest) -> AsyncGenerator[dict, None]:
         """Execute the pipeline with streaming. Yields SSE-formatted dicts:
         - {"event": "token", "data": "<text chunk>"}
         - {"event": "metadata", "data": "<json payload>"}
@@ -329,6 +319,9 @@ class QueryPipeline:
                 if result is not None:
                     gen_result = result
 
+        # gen_result is always set by the generator stream's final yield
+        assert gen_result is not None, "Generator stream did not yield a result"
+
         # STEP 7.5: Check for self-admitted ignorance
         if self._answer_admits_ignorance(gen_result.answer):
             reasons = rq_reasons + [ReasonCode.LOW_GROUNDEDNESS]
@@ -348,12 +341,8 @@ class QueryPipeline:
             evidence_chunks = [c.chunk for c in reranked]
 
             groundedness_score, contradiction_rate = await asyncio.gather(
-                self._groundedness.check(
-                    gen_result.answer, evidence_chunks, processed.normalized
-                ),
-                self._contradiction.detect_answer_conflicts(
-                    gen_result.answer, evidence_chunks
-                ),
+                self._groundedness.check(gen_result.answer, evidence_chunks, processed.normalized),
+                self._contradiction.detect_answer_conflicts(gen_result.answer, evidence_chunks),
             )
 
             sc_score = None
@@ -366,9 +355,7 @@ class QueryPipeline:
                 groundedness_score, contradiction_rate, sc_score, request.mode
             )
 
-        confidence = self._confidence.score(
-            rq_score, groundedness_score, contradiction_rate
-        )
+        confidence = self._confidence.score(rq_score, groundedness_score, contradiction_rate)
 
         log_generation_metrics(
             trace.trace_id,
@@ -455,8 +442,7 @@ class QueryPipeline:
     ) -> QueryResponseSchema:
         """Build a clarify response: answer + caveat + citations."""
         answer_text = (
-            gen_result.answer
-            + "\n\nNote: This answer has moderate uncertainty. "
+            gen_result.answer + "\n\nNote: This answer has moderate uncertainty. "
             "Some claims may not be fully supported by the available evidence."
         )
         confidence = round(rq_score * 0.5, 4)
@@ -538,7 +524,9 @@ class QueryPipeline:
         return any(phrase in lower for phrase in refusal_patterns)
 
     @staticmethod
-    def _map_decision(verification_decision: str, mode: str) -> str:
+    def _map_decision(
+        verification_decision: str, mode: str
+    ) -> Literal["answer", "clarify", "abstain"]:
         """Map verification decision to API response decision."""
         if verification_decision == "pass":
             return "answer"

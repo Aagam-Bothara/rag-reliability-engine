@@ -19,14 +19,10 @@ class SelfConsistencyChecker:
     def __init__(self, llm) -> None:
         self._llm = llm
 
-    async def check(
-        self, query: str, evidence: list[Chunk], original_answer: str
-    ) -> float:
+    async def check(self, query: str, evidence: list[Chunk], original_answer: str) -> float:
         """Regenerate a brief answer and compare with the original. Returns similarity 0-1."""
         evidence_block = format_evidence_block(evidence)
-        prompt = SELF_CONSISTENCY_PROMPT.format(
-            query=query, evidence_block=evidence_block
-        )
+        prompt = SELF_CONSISTENCY_PROMPT.format(query=query, evidence_block=evidence_block)
 
         try:
             brief_answer = await self._llm.generate(

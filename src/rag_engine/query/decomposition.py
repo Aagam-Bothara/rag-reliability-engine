@@ -27,9 +27,7 @@ class QueryDecomposer:
         prompt = QUERY_DECOMPOSITION_PROMPT.format(query=query)
 
         try:
-            result = await self._llm.generate_structured(
-                prompt, DecompositionResponse
-            )
+            result = await self._llm.generate_structured(prompt, DecompositionResponse)
             sub_questions = result.sub_questions[:MAX_SUB_QUESTIONS]
             synthesis = result.synthesis_instruction
         except Exception:

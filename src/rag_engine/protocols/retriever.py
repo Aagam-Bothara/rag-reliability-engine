@@ -8,9 +8,7 @@ from rag_engine.models.domain import RetrievalCandidate
 
 
 class Retriever(Protocol):
-    async def retrieve(
-        self, query: str, top_k: int = 50
-    ) -> list[RetrievalCandidate]: ...
+    async def retrieve(self, query: str, top_k: int = 50) -> list[RetrievalCandidate]: ...
 
 
 class HybridRetriever(Protocol):

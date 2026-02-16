@@ -35,8 +35,10 @@ def test_filter_garbage_non_alpha():
 
 
 def test_filter_garbage_repetitive():
-    chunks = [_make_chunk("word word word word word word word word word word"),
-              _make_chunk("Each word here is unique and different text.")]
+    chunks = [
+        _make_chunk("word word word word word word word word word word"),
+        _make_chunk("Each word here is unique and different text."),
+    ]
     filtered = filter_garbage_chunks(chunks)
     assert len(filtered) == 1
 

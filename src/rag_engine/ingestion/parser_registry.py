@@ -9,16 +9,17 @@ from rag_engine.ingestion.parser_html import HTMLParser
 from rag_engine.ingestion.parser_markdown import MarkdownParser
 from rag_engine.ingestion.parser_pdf import PDFParser
 from rag_engine.ingestion.parser_text import TextParser
+from rag_engine.protocols.ingestion import FileParser
 
 
 class ParserRegistry:
     def __init__(self) -> None:
-        self._parsers: dict[str, object] = {}
+        self._parsers: dict[str, FileParser] = {}
 
-    def register(self, extension: str, parser: object) -> None:
+    def register(self, extension: str, parser: FileParser) -> None:
         self._parsers[extension.lower()] = parser
 
-    def get_parser(self, filename: str) -> object:
+    def get_parser(self, filename: str) -> FileParser:
         ext = Path(filename).suffix.lower()
         parser = self._parsers.get(ext)
         if parser is None:
@@ -35,7 +36,8 @@ class ParserRegistry:
 def create_default_registry() -> ParserRegistry:
     """Create a registry with all built-in parsers."""
     registry = ParserRegistry()
-    for parser in [TextParser(), MarkdownParser(), HTMLParser(), PDFParser()]:
+    parsers: list[FileParser] = [TextParser(), MarkdownParser(), HTMLParser(), PDFParser()]
+    for parser in parsers:
         for ext in parser.supported_extensions:
             registry.register(ext, parser)
     return registry
