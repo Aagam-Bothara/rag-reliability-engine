@@ -9,6 +9,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 
 from rag_engine.api.dependencies import get_ingest_pipeline
+from rag_engine.api.rate_limiter import rate_limit
 from rag_engine.exceptions import IngestionError
 from rag_engine.ingestion.pipeline import IngestionPipeline
 from rag_engine.models.schemas import IngestResponse
@@ -21,6 +22,7 @@ async def ingest(
     file: UploadFile,
     metadata: str = Form("{}"),
     pipeline: IngestionPipeline = Depends(get_ingest_pipeline),
+    _auth: dict = Depends(rate_limit),
 ) -> IngestResponse:
     # Parse metadata
     try:

@@ -40,6 +40,9 @@ dependencies = [
     "pydantic>=2.8.0",
     "pydantic-settings>=2.4.0",
 
+    # Auth
+    "pyjwt>=2.8.0",
+
     # Database
     "aiosqlite>=0.20.0",
 

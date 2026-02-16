@@ -43,6 +43,33 @@ class GeminiProvider:
         except Exception as e:
             raise GenerationError(f"Gemini generation failed: {e}") from e
 
+    async def generate_stream(
+        self,
+        prompt: str,
+        system: str | None = None,
+        temperature: float = 0.1,
+        max_tokens: int = 4096,
+    ):
+        """Yield text chunks from Gemini streaming API."""
+        try:
+            config = types.GenerateContentConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            )
+            if system:
+                config.system_instruction = system
+
+            response = await self._client.aio.models.generate_content_stream(
+                model=self._model,
+                contents=prompt,
+                config=config,
+            )
+            async for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+        except Exception as e:
+            raise GenerationError(f"Gemini streaming failed: {e}") from e
+
     async def generate_structured(
         self,
         prompt: str,

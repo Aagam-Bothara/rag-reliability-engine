@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  rag-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - RAG_HOST=0.0.0.0
+      - RAG_PORT=8000
+      - RAG_SQLITE_DOC_DB_PATH=/app/data/rag.db
+      - RAG_SQLITE_TRACE_DB_PATH=/app/data/traces.db
+      - RAG_EMBEDDING_CACHE_DB_PATH=/app/data/embedding_cache.db
+      - RAG_FAISS_INDEX_PATH=/app/data/faiss_index
+      - RAG_BM25_INDEX_PATH=/app/data/bm25_index
+    restart: unless-stopped

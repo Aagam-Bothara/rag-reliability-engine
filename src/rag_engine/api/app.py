@@ -8,12 +8,15 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
+from rag_engine.api.auth import router as auth_router
 from rag_engine.api.middleware import RequestTimingMiddleware
 from rag_engine.api.routes_health import router as health_router
 from rag_engine.api.routes_ingest import router as ingest_router
 from rag_engine.api.routes_query import router as query_router
 from rag_engine.chunking.structure_chunker import StructureChunker
 from rag_engine.config.settings import Settings
+from rag_engine.embeddings.cache import EmbeddingCache
+from rag_engine.embeddings.cached_embedder import CachedEmbedder
 from rag_engine.embeddings.openai_embedder import OpenAIEmbedder
 from rag_engine.generation.answer_generator import AnswerGenerator
 from rag_engine.generation.gemini_provider import GeminiProvider
@@ -46,7 +49,11 @@ async def lifespan(app: FastAPI):
     setup_logging()
 
     # Ensure data directories exist
-    for path in [settings.sqlite_doc_db_path, settings.sqlite_trace_db_path]:
+    for path in [
+        settings.sqlite_doc_db_path,
+        settings.sqlite_trace_db_path,
+        settings.embedding_cache_db_path,
+    ]:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
 
     # Storage
@@ -55,13 +62,16 @@ async def lifespan(app: FastAPI):
     trace_store = SQLiteTraceStore(settings.sqlite_trace_db_path)
     await trace_store.initialize()
 
-    # Embedding
-    embedder = OpenAIEmbedder(
+    # Embedding (with cache)
+    raw_embedder = OpenAIEmbedder(
         api_key=settings.openai_api_key,
         model=settings.embedding_model,
         batch_size=settings.embedding_batch_size,
         _dimensions=settings.embedding_dimensions,
     )
+    embedding_cache = EmbeddingCache(settings.embedding_cache_db_path)
+    await embedding_cache.initialize()
+    embedder = CachedEmbedder(delegate=raw_embedder, cache=embedding_cache)
 
     # Vector store
     vector_store = FAISSVectorStore(
@@ -183,6 +193,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(RequestTimingMiddleware)
     app.include_router(health_router, tags=["health"])
+    app.include_router(auth_router)
     app.include_router(ingest_router, tags=["ingest"])
     app.include_router(query_router, tags=["query"])
     return app

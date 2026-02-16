@@ -6,7 +6,7 @@ import asyncio
 
 import numpy as np
 
-from rag_engine.embeddings.openai_embedder import OpenAIEmbedder
+from rag_engine.protocols.embedder import Embedder
 from rag_engine.keyword_search.bm25_index import BM25Index
 from rag_engine.models.domain import Chunk, RetrievalCandidate
 from rag_engine.observability.logger import get_logger
@@ -23,7 +23,7 @@ class HybridRetrieverImpl:
         vector_store: FAISSVectorStore,
         bm25_index: BM25Index,
         doc_store: SQLiteDocStore,
-        embedder: OpenAIEmbedder,
+        embedder: Embedder,
         rrf_k: int = 60,
     ) -> None:
         self._vector_store = vector_store

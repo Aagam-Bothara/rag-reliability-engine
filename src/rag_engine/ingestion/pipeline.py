@@ -14,7 +14,7 @@ from rag_engine.chunking.quality import (
     filter_garbage_chunks,
 )
 from rag_engine.chunking.structure_chunker import StructureChunker
-from rag_engine.embeddings.openai_embedder import OpenAIEmbedder
+from rag_engine.protocols.embedder import Embedder
 from rag_engine.ingestion.parser_registry import ParserRegistry
 from rag_engine.keyword_search.bm25_index import BM25Index
 from rag_engine.models.domain import Document
@@ -31,7 +31,7 @@ class IngestionPipeline:
         self,
         parser_registry: ParserRegistry,
         chunker: StructureChunker,
-        embedder: OpenAIEmbedder,
+        embedder: Embedder,
         vector_store: FAISSVectorStore,
         bm25_index: BM25Index,
         doc_store: SQLiteDocStore,

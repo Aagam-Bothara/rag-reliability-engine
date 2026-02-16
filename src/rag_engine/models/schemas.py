@@ -12,6 +12,7 @@ class QueryRequest(BaseModel):
     context: str | None = None
     mode: Literal["strict", "normal"] = "normal"
     latency_budget_ms: int = 5000
+    stream: bool = False
 
 
 class Citation(BaseModel):

@@ -164,7 +164,12 @@ flowchart LR
 - **Normal + strict modes** — strict mode raises all thresholds for conservative operation
 - **Full observability** — structured JSON logging, per-request tracing with spans, query trace persistence
 - **Evaluation harness** — 75 labeled test cases, 5 categories, auto-generated + manually verified ([tests/](tests/), [eval/](src/rag_engine/evaluation/))
-- **39 unit + integration tests** — chunking, RRF, scoring, tokenizer, schemas, storage ([tests/](tests/))
+- **Embedding cache** — SQLite-backed cache avoids re-embedding identical text, wired transparently into the pipeline
+- **Streaming responses (SSE)** — `POST /query/stream` streams answer tokens via Server-Sent Events, then sends metadata (citations, confidence, decision) as a final event
+- **JWT authentication + rate limiting** — `POST /auth/token` exchanges API keys for JWTs; protected endpoints enforce Bearer token auth and per-key sliding-window rate limiting
+- **Docker** — multi-stage Dockerfile + docker-compose for single-command deployment with volume-mounted persistence
+- **CI/CD** — GitHub Actions pipeline: lint (ruff), type-check (mypy), test (pytest), Docker build
+- **51 unit + integration tests** — chunking, RRF, scoring, tokenizer, schemas, storage, embedding cache, auth, rate limiting ([tests/](tests/))
 
 ---
 
@@ -218,6 +223,8 @@ cp .env.example .env
 # Edit .env with your API keys:
 #   RAG_GOOGLE_API_KEY=your-gemini-key
 #   RAG_OPENAI_API_KEY=your-openai-key
+#   RAG_API_KEYS=your-api-key        (for JWT auth)
+#   RAG_JWT_SECRET=your-secret        (change in production)
 
 # Start the server
 python -m rag_engine.main
@@ -225,24 +232,49 @@ python -m rag_engine.main
 
 Server starts at `http://localhost:8000`.
 
+### Docker
+
+```bash
+# Start with Docker Compose
+docker compose up --build
+
+# Or build and run manually
+docker build -t rag-engine .
+docker run -p 8000:8000 --env-file .env -v ./data:/app/data rag-engine
+```
+
 ### Try It Out
 
 ```bash
-# Check health
+# Check health (no auth required)
 curl http://localhost:8000/health
+
+# Get a JWT token
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"api_key": "your-api-key"}' | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Ingest a file
 curl -X POST http://localhost:8000/ingest \
+  -H "Authorization: Bearer $TOKEN" \
   -F "file=@your-document.txt" \
   -F 'metadata={"source": "my-doc"}'
 
 # Ask a question
 curl -X POST http://localhost:8000/query \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What does the document say about X?"}'
+
+# Stream a response (SSE)
+curl -N -X POST http://localhost:8000/query/stream \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the document say about X?"}'
 
 # Ask in strict mode (higher thresholds)
 curl -X POST http://localhost:8000/query \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the document say about X?", "mode": "strict"}'
 ```
@@ -269,10 +301,10 @@ python scripts/run_eval.py
 
 ```
 src/rag_engine/
-├── api/                  # FastAPI routes, middleware, dependency injection
+├── api/                  # FastAPI routes, middleware, auth, rate limiting, DI
 ├── chunking/             # Structure-aware splitting + overlap + quality filtering
 ├── config/               # Pydantic Settings (env-driven) + constants
-├── embeddings/           # OpenAI embedder + SQLite cache
+├── embeddings/           # OpenAI embedder + SQLite cache + cached embedder wrapper
 ├── evaluation/           # Eval harness: metrics, runner, dataset generation
 ├── generation/           # Gemini provider + prompt templates + answer builder
 ├── ingestion/            # File parsers (txt/md/html/pdf) + registry + pipeline
@@ -293,11 +325,13 @@ src/rag_engine/
 
 ## API
 
-```
-POST /query     →  { answer, citations, confidence, decision, reasons, debug }
-POST /ingest    →  multipart file + metadata  →  { doc_id, chunks_created, status }
-GET  /health    →  { status, docs, chunks, index_size }
-```
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /health` | No | Health check with doc/chunk/index counts |
+| `POST /auth/token` | No | Exchange API key for JWT (`{"api_key": "..."}` → `{"access_token": "..."}`) |
+| `POST /query` | Yes | Query with full response (`{ answer, citations, confidence, decision, reasons, debug }`) |
+| `POST /query/stream` | Yes | Query with SSE streaming (`event: token`, `event: metadata`, `event: done`) |
+| `POST /ingest` | Yes | Ingest document (multipart file + metadata → `{ doc_id, chunks_created, status }`) |
 
 ---
 
@@ -320,20 +354,26 @@ RQ = w1×relevance + w2×margin + w3×coverage + w4×consistency
 - **Coverage**: How many unique source documents appear in the results
 - **Consistency**: Agreement among top-5 scores (low std = consistent retrieval)
 
-Based on these signals, the system makes a decision:
-- **pass** — evidence is solid, answer is grounded
-- **warn** — answer provided but with caveats
+Based on these signals, the system makes a three-state decision:
+- **answer** — evidence is solid, answer is grounded
+- **clarify** — answer provided but with uncertainty caveat (borderline verification or high-RQ ignorance)
 - **abstain** — evidence too weak, refuses to answer rather than hallucinate
 
 ---
 
-## What's Not Done Yet
+## Configuration
 
-- **Embedding cache** — schema exists but not wired into the pipeline yet
-- **Streaming responses** — answers are returned in full, not streamed
-- **Auth/rate limiting** — no API authentication (intended for local/internal use)
-- **Docker** — no containerization yet
-- **CI/CD** — no automated test pipeline
+All settings are driven by environment variables with the `RAG_` prefix. See [.env.example](.env.example) for the full list.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RAG_OPENAI_API_KEY` | — | OpenAI API key (embeddings) |
+| `RAG_GOOGLE_API_KEY` | — | Google API key (Gemini LLM) |
+| `RAG_API_KEYS` | `""` | Comma-separated valid API keys for JWT auth |
+| `RAG_JWT_SECRET` | `change-me-in-production` | Secret for signing JWT tokens |
+| `RAG_JWT_EXPIRY_MINUTES` | `60` | JWT token expiration time |
+| `RAG_RATE_LIMIT_REQUESTS_PER_MINUTE` | `60` | Max requests per key per minute |
+| `RAG_EMBEDDING_CACHE_DB_PATH` | `data/embedding_cache.db` | Path to embedding cache SQLite DB |
 
 ---
 

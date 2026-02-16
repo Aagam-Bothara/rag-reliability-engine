@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     # Storage paths
     sqlite_doc_db_path: str = "data/rag.db"
     sqlite_trace_db_path: str = "data/traces.db"
+    embedding_cache_db_path: str = "data/embedding_cache.db"
     faiss_index_path: str = "data/faiss_index"
     bm25_index_path: str = "data/bm25_index"
 
@@ -68,5 +69,14 @@ class Settings(BaseSettings):
 
     # Cross-encoder
     cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+    # Auth / JWT
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_minutes: int = 60
+    api_keys: str = ""  # comma-separated list of valid API keys
+
+    # Rate limiting
+    rate_limit_requests_per_minute: int = 60
 
     model_config = {"env_file": ".env", "env_prefix": "RAG_"}

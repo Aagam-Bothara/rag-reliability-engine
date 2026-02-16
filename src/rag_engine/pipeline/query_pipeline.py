@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import AsyncGenerator
 
 from rag_engine.config.settings import Settings
 from rag_engine.generation.answer_generator import AnswerGenerator
@@ -242,6 +243,177 @@ class QueryPipeline:
         asyncio.create_task(self._trace_store.save_trace(trace_obj))
 
         return response
+
+    async def execute_stream(
+        self, request: QueryRequest
+    ) -> AsyncGenerator[dict, None]:
+        """Execute the pipeline with streaming. Yields SSE-formatted dicts:
+        - {"event": "token", "data": "<text chunk>"}
+        - {"event": "metadata", "data": "<json payload>"}
+        - {"event": "done", "data": ""}
+        """
+        trace = TraceContext()
+        deadline = time.monotonic() + request.latency_budget_ms / 1000
+
+        # STEPS 1-6: Same as execute() — non-streaming
+        with trace.span("query_understanding"):
+            processed = await self._qu.process(request.query)
+
+        with trace.span("decomposition"):
+            decomposed = await self._decomposer.decompose(processed.normalized)
+
+        all_candidates: list[RetrievalCandidate] = []
+        with trace.span("retrieval"):
+            for sq in decomposed.sub_questions:
+                candidates = await self._retriever.retrieve(
+                    sq,
+                    top_k_bm25=self._settings.bm25_top_k,
+                    top_k_vector=self._settings.vector_top_k,
+                )
+                all_candidates.extend(candidates)
+            all_candidates = self._deduplicate(all_candidates)
+
+        with trace.span("reranking"):
+            reranked = await self._reranker.rerank(
+                processed.normalized, all_candidates, top_n=self._settings.rerank_top_n
+            )
+
+        with trace.span("rq_scoring"):
+            rq_score, rq_reasons = self._rq_scorer.score(reranked)
+
+        log_retrieval_metrics(
+            trace.trace_id,
+            rq_score,
+            [c.score for c in reranked],
+            len(reranked),
+            len(set(c.chunk.doc_id for c in reranked)),
+        )
+
+        proceed_threshold = (
+            self._settings.strict_rq_proceed_threshold
+            if request.mode == "strict"
+            else self._settings.rq_proceed_threshold
+        )
+
+        # Early exit: abstain
+        if rq_score < self._settings.rq_fallback_threshold:
+            response = self._build_abstain_response(rq_score, rq_reasons, trace, request)
+            yield {"event": "metadata", "data": response.model_dump_json()}
+            yield {"event": "done", "data": ""}
+            return
+
+        # Fallback if needed
+        if rq_score < proceed_threshold:
+            with trace.span("fallback"):
+                fallback_result = await self._fallback.fallback_retrieve(
+                    processed.normalized, self._generator._llm
+                )
+                if fallback_result.decision == "abstain":
+                    reasons = rq_reasons + [ReasonCode.FALLBACK_FAILED]
+                    response = self._build_abstain_response(rq_score, reasons, trace, request)
+                    yield {"event": "metadata", "data": response.model_dump_json()}
+                    yield {"event": "done", "data": ""}
+                    return
+                reranked = fallback_result.candidates
+                rq_score = fallback_result.quality_score
+                rq_reasons.append(ReasonCode.FALLBACK_USED)
+
+        # STEP 7: Stream generation
+        gen_result = None
+        with trace.span("generation"):
+            async for chunk_text, result in self._generator.generate_stream(
+                processed.normalized, reranked, decomposed, request.mode
+            ):
+                if chunk_text is not None:
+                    yield {"event": "token", "data": chunk_text}
+                if result is not None:
+                    gen_result = result
+
+        # STEP 7.5: Check for self-admitted ignorance
+        if self._answer_admits_ignorance(gen_result.answer):
+            reasons = rq_reasons + [ReasonCode.LOW_GROUNDEDNESS]
+            if rq_score >= self._settings.rq_proceed_threshold:
+                response = self._build_clarify_response(
+                    gen_result, rq_score, reasons, trace, request
+                )
+            else:
+                response = self._build_abstain_response(rq_score, reasons, trace, request)
+            yield {"event": "metadata", "data": response.model_dump_json()}
+            yield {"event": "done", "data": ""}
+            return
+
+        # STEPS 8-10: Verification, confidence, response building
+        with trace.span("verification"):
+            remaining_ms = (deadline - time.monotonic()) * 1000
+            evidence_chunks = [c.chunk for c in reranked]
+
+            groundedness_score, contradiction_rate = await asyncio.gather(
+                self._groundedness.check(
+                    gen_result.answer, evidence_chunks, processed.normalized
+                ),
+                self._contradiction.detect_answer_conflicts(
+                    gen_result.answer, evidence_chunks
+                ),
+            )
+
+            sc_score = None
+            if remaining_ms > 1500:
+                sc_score = await self._self_consistency.check(
+                    processed.normalized, evidence_chunks, gen_result.answer
+                )
+
+            verification = self._verification.decide(
+                groundedness_score, contradiction_rate, sc_score, request.mode
+            )
+
+        confidence = self._confidence.score(
+            rq_score, groundedness_score, contradiction_rate
+        )
+
+        log_generation_metrics(
+            trace.trace_id,
+            groundedness_score,
+            contradiction_rate,
+            confidence,
+            verification.decision,
+        )
+
+        all_reasons = rq_reasons + verification.reason_codes
+        decision = self._map_decision(verification.decision, request.mode)
+
+        metadata = QueryResponseSchema(
+            answer=gen_result.answer,
+            citations=[
+                Citation(
+                    doc_id=c.doc_id,
+                    chunk_id=c.chunk_id,
+                    text_snippet=c.text[:200],
+                )
+                for c in gen_result.cited_chunks
+            ],
+            confidence=round(confidence, 4),
+            decision=decision,
+            reasons=[str(r) for r in all_reasons],
+            debug=DebugInfo(
+                retrieval_quality=round(rq_score, 4),
+                rerank_top_scores=[round(c.score, 4) for c in reranked[:5]],
+                trace_id=trace.trace_id,
+                latency_ms=round(trace.elapsed_ms, 2),
+            ),
+        )
+
+        # Save trace
+        trace_obj = trace.to_trace(
+            query=request.query,
+            rq_score=rq_score,
+            confidence=confidence,
+            decision=decision,
+            reason_codes=[str(r) for r in all_reasons],
+        )
+        asyncio.create_task(self._trace_store.save_trace(trace_obj))
+
+        yield {"event": "metadata", "data": metadata.model_dump_json()}
+        yield {"event": "done", "data": ""}
 
     def _build_abstain_response(
         self,
